@@ -102,14 +102,15 @@ class Board
   end
 
   def set_figure(figure, pos)
-    index = get_pos(pos)
+    index = get_index(pos)
     cell = @board[index]
     token = colorize(figure.token, figure.color, cell.color)
     cell.content = set_color_fg(token, :black)
   end
 
   def cell_empty?(pos)
-    @board[pos[0] * @columns + pos[1]].content == "  "
+    index = get_index(pos)
+    @board[index].content.include?("  ")
   end
 
   # bfs and neighbors
@@ -118,7 +119,7 @@ class Board
           position[1] >= 0 and position[1] <= @columns)
   end
 
-  def get_pos(pos)
+  def get_index(pos)
     pos[0] * @columns + pos[1]
   end
 

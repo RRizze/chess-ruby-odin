@@ -10,42 +10,40 @@ describe Board do
     end
   end
 
-  context "Coloring text" do
-    describe "#colorize" do
-      # how can i test it?
-    end
-  end
-
-  describe "#print_board" do
-    xit "should print the board" do
-      # how can i test it?
+  describe "#get_index" do
+    it "returns index from pos[x,y]" do
+      board = Board.new
+      pos = [3,3]
+      index = board.get_index(pos)
+      expect(index).to eq(27)
     end
   end
 
   describe "#set_figure" do
-    xit "changes game symbol if move is legal" do
+    it "changes game symbol if move is legal" do
       pos = [4, 4]
-      queen = Queen.new(pos)
+      queen = Queen.new(:black)
       board = Board.new
-      board.set_figure(queen)
-      # change game_symbol for...  .get_symbol, .sign, .to_s, .to_str
-      expect(board.board[pos[0] * 7 + pos[1]].content).to be(queen.game_symbol)
+      board.set_figure(queen, pos)
+      index = board.get_index(pos)
+      res = board.board[index].content.include?(queen.token)
+      expect(res).to be true
     end
   end
 
-  describe "#cell_free?" do
-    xit "returns true if cell is empty" do
+  describe "#cell_empty?" do
+    it "returns true if cell is empty" do
       pos = [4, 4]
       board = Board.new
       res = board.cell_empty?(pos)
       expect(res).to be true
     end
 
-    xit "returns flase if cell is not empty" do
+    it "returns flase if cell is not empty" do
       pos = [4, 4]
-      queen = Queen.new(pos)
+      queen = Queen.new(:black)
       board = Board.new
-      board.set_figure(queen)
+      board.set_figure(queen, pos)
       res = board.cell_empty?(pos)
       expect(res).to be false
     end
@@ -53,19 +51,17 @@ describe Board do
 
 
   describe "#in_bounds?" do
-    xit "returns true if figure in the bounds" do
+    it "returns true if figure in the bounds" do
       pos = [4, 4]
-      queen = Queen.new(pos)
       board = Board.new
-      res = board.in_bounds?(queen.position)
+      res = board.in_bounds?(pos)
       expect(res).to be true
     end
 
-    xit "returns false if figure not in the bounds" do
+    it "returns false if figure not in the bounds" do
       pos = [-1, 4]
-      queen = Queen.new
       board = Board.new
-      res = board.in_bounds?(queen.position)
+      res = board.in_bounds?(pos)
       expect(res).to be false
     end
   end
