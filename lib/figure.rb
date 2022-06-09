@@ -9,4 +9,9 @@ class Figure
     @color = color
   end
 
+
+  def set_token(token)
+    @token = token
+  end
+
 end

@@ -31,7 +31,10 @@ class Board
     no_color: -> (str) { "\e[#{str}#{ESC_CLR}"},
   }
 
-  POSITIONS = ["a", "b", "c", "d", "e", "f", "g", "h"]
+  LABELS = {
+    letters: ["a", "b", "c", "d", "e", "f", "g", "h"],
+    nums: ["8", "7", "6", "5", "4", "3", "2", "1"],
+  }
 
   def initialize
     @rows = 8
@@ -83,34 +86,40 @@ class Board
 
   def print_board
     cell_str = ""
-    puts " " + POSITIONS.join(" ")
+    puts " " + LABELS[:letters].join(" ")
     (0..7).each do |row|
       cell_str += "#{@rows-row}"
       (0..7).each do |col|
         pos = row * @columns + col
-        if (row+col) % 2 == 0
+        if @board[pos].content.is_a?(String)
           cell_str += @board[pos].content
         else
-          cell_str += @board[pos].content
+          cell_str += @board[pos].content.token
         end
       end
       cell_str += "#{row+1}"
       cell_str += "\n"
     end
     print cell_str
-    puts " " + POSITIONS.join(" ")
+    puts " " + LABELS[:letters].join(" ")
   end
 
   def set_figure(figure, pos)
     index = get_index(pos)
     cell = @board[index]
     token = colorize(figure.token, figure.color, cell.color)
-    cell.content = set_color_fg(token, :black)
+    figure.set_token(token)
+    cell.content = figure
   end
 
   def cell_empty?(pos)
     index = get_index(pos)
-    @board[index].content.include?("  ")
+    content = @board[index].content
+    if content.is_a?(String)
+      return true
+    elsif content.is_a?(Figure)
+      return false
+    end
   end
 
   # bfs and neighbors
@@ -121,6 +130,26 @@ class Board
 
   def get_index(pos)
     pos[0] * @columns + pos[1]
+  end
+
+  def move_to_pos(move)
+    move_arr = move.split("-")
+    move_arr.map do |move|
+      row = LABELS[:letters].index(move[0])
+      col = LABELS[:nums].index(move[1])
+      [col, row]
+    end
+  end
+
+  def move(figure, move)
+    # check if position is valid
+    # check if cell is empty
+    # check if there's a figure it's another different color
+    from, to = move_to_pos(move)
+    # get figure from board?
+    # change create board and display.
+    # content = "  " or figure.token
+    set_figure(figure, to)
   end
 
   private
