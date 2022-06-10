@@ -49,39 +49,20 @@ class Board
       (0..7).each do |col|
         content = "  "
         if (row+col) % 2 == 0
-          color = :blue
-          content = set_color_bg(content, :blue)
-          board.push(Cell.new([row, col], content, color))
+          content = colorize(content, :blue, :blue)
+          board.push(Cell.new([row, col], content, :blue))
         else
-          color = :white
-          content = set_color_bg(content, :white)
-          board.push(Cell.new([row, col], content, color))
+          content = colorize(content, :white, :white)
+          board.push(Cell.new([row, col], content, :white))
         end
       end
     end
     board
   end
 
-
   def colorize(str, fg, bg)
     str = "" if str.nil?
     "\e[#{COLORS[:fg][fg]};#{COLORS[:bg][bg]}m#{str}#{ESC_CLR}"
-  end
-
-  def set_color_fg(str, fg)
-    "\e[#{COLORS[:fg][fg]}m#{str}#{ESC_CLR}"
-  end
-
-  def set_color_bg(str, bg)
-    "\e[#{COLORS[:bg][bg]}m#{str}#{ESC_CLR}"
-  end
-
-  def set_color(str, fg, bg)
-    if COLORS[:fg].has_key?(fg) && COLORS[:bg].has_key?(bg)
-      colorize(str, fg, bg)
-    else
-      COLORS[:no_color].call(str)
-    end
   end
 
   def print_board
@@ -104,14 +85,6 @@ class Board
     puts " " + LABELS[:letters].join(" ")
   end
 
-  def set_figure(figure, pos)
-    index = get_index(pos)
-    cell = @board[index]
-    token = colorize(figure.token, figure.color, cell.color)
-    figure.set_token(token)
-    cell.content = figure
-  end
-
   def cell_empty?(pos)
     index = get_index(pos)
     content = @board[index].content
@@ -122,34 +95,8 @@ class Board
     end
   end
 
-  # bfs and neighbors
-  def in_bounds?(position)
-    return (position[0] >= 0 and position[0] <= @rows and
-          position[1] >= 0 and position[1] <= @columns)
-  end
-
   def get_index(pos)
     pos[0] * @columns + pos[1]
-  end
-
-  def move_to_pos(move)
-    move_arr = move.split("-")
-    move_arr.map do |move|
-      row = LABELS[:letters].index(move[0])
-      col = LABELS[:nums].index(move[1])
-      [col, row]
-    end
-  end
-
-  def move(figure, move)
-    # check if position is valid
-    # check if cell is empty
-    # check if there's a figure it's another different color
-    from, to = move_to_pos(move)
-    # get figure from board?
-    # change create board and display.
-    # content = "  " or figure.token
-    set_figure(figure, to)
   end
 
   private

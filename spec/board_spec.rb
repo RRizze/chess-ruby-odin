@@ -80,16 +80,14 @@ describe Board do
 
     describe "#move" do
       it "place figure on the target cell if is empty" do
-        figure = Queen.new(:black)
-        path = "d5-d4"
+        path = "d2-d3"
         board = Board.new
 
         # set figure on the board
         pos_arr = board.move_to_pos(path)
-        board.set_figure(figure, pos_arr[0])
 
         # move figure
-        board.move(figure, path)
+        board.move(path)
 
         index = board.get_index(pos_arr[1])
 
