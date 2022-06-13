@@ -10,5 +10,6 @@ end
 board = Board.new
 board.print_board
 
-board.move("e2-e4")
+board.move("e2-e3")
+board.move("b8-c6")
 board.print_board

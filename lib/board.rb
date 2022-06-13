@@ -6,30 +6,12 @@ require_relative "bishop"
 require_relative "rook"
 require_relative "queen"
 require_relative "king"
+require_relative "color"
 
 class Board
+  include Color
   attr_accessor :board
 
-  ESC_CLR = "\e[0m"
-  COLORS = {
-    fg: {
-      # foreground colors
-      black: "30",
-      red: "31",
-      green: "32",
-      blue: "34",
-      white: "37",
-    },
-    bg: {
-      # background colors
-      black: "40",
-      red: "41",
-      green: "42",
-      blue: "44",
-      white: "47",
-    },
-    no_color: -> (str) { "\e[#{str}#{ESC_CLR}"},
-  }
 
   LABELS = {
     letters: ["a", "b", "c", "d", "e", "f", "g", "h"],
@@ -62,19 +44,11 @@ class Board
     board
   end
 
-  def colorize(str, fg, bg)
-    str = "" if str.nil?
-    "\e[#{COLORS[:fg][fg]};#{COLORS[:bg][bg]}m#{str}#{ESC_CLR}"
-  end
-
-  def set_color_bg(str, bg)
-    "\e[#{COLORS[:bg][bg]}m#{str}#{ESC_CLR}"
-  end
 
   def set_figure(figure, pos)
     index = get_index(pos)
     bg_color = @board[index].color
-    figure.token = colorize(figure.token, figure.color, bg_color)
+    figure.set_token_bg(bg_color)
 
     @board[index].content = figure
   end
@@ -86,11 +60,11 @@ class Board
       cell_str += "#{@rows-row}"
       (0..7).each do |col|
         pos = get_index([row, col])
+
         if cell_is_empty?([row, col])
-        #if  @board[pos].content.is_a?(String)
           cell_str += @board[pos].content
         else
-          cell_str += @board[pos].content.token
+          cell_str += @board[pos].content.token_bg
         end
       end
       cell_str += "#{row+1}"
@@ -124,8 +98,10 @@ class Board
     from = pos[0]
     to = pos[1]
 
-    figure = @board[get_index(from)].content
-    #bg_color = @board[get_index(to)].color
+    cell = @board[get_index(from)]
+    figure = cell.content
+    cell.content = colorize("  ", :no_color, cell.color)
+
     set_figure(figure, to)
 
   end
