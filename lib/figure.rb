@@ -1,7 +1,6 @@
 class Figure
+  attr_reader :color, :directions
   attr_accessor :token
-  attr_reader :directions
-  attr_accessor :color
 
   def initialize(color)
     @token = ""
