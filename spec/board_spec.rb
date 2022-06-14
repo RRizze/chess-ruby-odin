@@ -11,7 +11,7 @@ describe Board do
   end
 
   describe "#get_index" do
-    xit "returns index from pos[x,y]" do
+    it "returns index from pos[x,y]" do
       board = Board.new
       pos = [3,3]
       index = board.get_index(pos)
@@ -61,7 +61,28 @@ describe Board do
       end
     end
 
-    describe "#move" do
+    describe "#neighbors" do
+      it "returns neighbors for current node" do
+        board = Board.new
+        # black figure
+        figure = board.board[board.get_index([1, 0])].content
+        # first move
+        res = board.neighbors([1, 0], figure)
+        expect(res).to eq([[2, 0], [3, 0]])
+      end
+    end
+
+    describe "#moves" do
+      it "returns available moves for particular figure" do
+        board = Board.new
+        move = [[1, 0], [2, 0]]
+        valid_moves = board.moves(move)
+        expect(valid_moves).to eq([[[1, 0], [2, 0]], [[1, 0], [3, 0]]])
+      end
+    end
+
+    describe "#valid_moves" do
+      # valid_moves depends on moves
     end
 
     describe "#in_bounds?" do

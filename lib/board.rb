@@ -12,7 +12,6 @@ class Board
   include Color
   attr_accessor :board
 
-
   LABELS = {
     letters: ["a", "b", "c", "d", "e", "f", "g", "h"],
     nums: ["8", "7", "6", "5", "4", "3", "2", "1"],
@@ -44,10 +43,10 @@ class Board
     board
   end
 
-
   def set_figure(figure, pos)
     index = get_index(pos)
     bg_color = @board[index].color
+    # update bg color
     figure.set_token_bg(bg_color)
 
     @board[index].content = figure
@@ -93,17 +92,80 @@ class Board
     pos
   end
 
+  def valid_moves(move)
+    figure_from = @board[get_index(move[0])].content
+    figure_to = @board[get_index(move[1])].content
+
+    case figure_from.class
+    when Pawn
+      valid_moves = moves(move)
+      return valid_moves
+    end
+  end
+
+  def moves(move)
+    cell_from = @board[get_index(move[0])]
+    cell_to = @board[get_index(move[1])]
+
+    frontier = []
+    frontier.push(move[0])
+    came_from = {} # a->b came_from[b] = a
+    # if I will need path
+    came_from[move[0]] = nil
+
+    while !frontier.empty?
+      current = frontier.shift
+      if current == move[1]
+        break;
+      end
+      figure = cell_from.content
+      neighbors = neighbors(current, figure)
+      for next_pos in neighbors
+        if !came_from.has_key?(next_pos)
+          frontier.push(next_pos)
+          came_from[next_pos] = current
+        end
+      end
+    end
+
+    res = []
+    for to, from in came_from
+      if !to.nil? && !from.nil?
+        res.push([from, to])
+      end
+    end
+    return res
+  end
+
+  def neighbors(from, figure)
+    result = []
+    dirs = figure.get_directions
+    for dir in dirs
+      result.push([
+        from[0] + dir[0],
+        from[1] + dir[1]
+      ])
+    end
+    return result
+  end
+
+
   def move(movement)
     pos = movement_to_arr(movement)
     from = pos[0]
     to = pos[1]
+    # check valid moves for figure
+    valid_moves = valid_moves(figure, to)
 
-    cell = @board[get_index(from)]
-    figure = cell.content
-    cell.content = colorize("  ", :no_color, cell.color)
+    if valid_moves.length > 0
+      cell = @board[get_index(from)]
+      figure = cell.content
+      # clear cell
+      cell.content = colorize("  ", :no_color, cell.color)
+    end
+
 
     set_figure(figure, to)
-
   end
 
   private
@@ -113,13 +175,11 @@ class Board
     (0..7).each do |col|
       p_black = Pawn.new(:black)
       set_figure(p_black, [1, col])
-      #@board[get_index([1, col])].content = p_black
     end
 
     (0..7).each do |col|
       p_white = Pawn.new(:no_color)
       set_figure(p_white, [6, col])
-      #@board[get_index([6, col])].content = p_white
     end
 
     # rook
@@ -127,34 +187,26 @@ class Board
     r2_black = Rook.new(:black)
     set_figure(r1_black, [0, 0])
     set_figure(r2_black, [0, 7])
-    #@board[get_index([0, 0])].content = r1_black
-    #@board[get_index([0, 7])].content = r2_black
 
     # knight
     k1_black = Knight.new(:black)
     k2_black = Knight.new(:black)
     set_figure(k1_black, [0, 1])
     set_figure(k2_black, [0, 6])
-    #@board[get_index([0, 1])].content = k1_black
-    #@board[get_index([0, 6])].content = k2_black
 
     # bishop
     b1_black = Bishop.new(:black)
     b2_black = Bishop.new(:black)
     set_figure(b1_black, [0, 2])
     set_figure(b2_black, [0, 5])
-    #@board[get_index([0, 2])].content = b1_black
-    #@board[get_index([0, 5])].content = b2_black
 
     # queen
     q_black = Queen.new(:black)
     set_figure(q_black, [0, 3])
-    #@board[get_index([0, 3])].content = q_black
 
     # king
     ki_black = King.new(:black)
     set_figure(ki_black, [0, 4])
-    #@board[get_index([0, 4])].content = ki_black
 
     # white
     # rook
@@ -162,34 +214,25 @@ class Board
     r2_white = Rook.new(:no_color)
     set_figure(r1_white, [7, 0])
     set_figure(r2_white, [7, 7])
-    #@board[get_index([7, 0])].content = r1_white
-    #@board[get_index([7, 7])].content = r2_white
 
     # knight
     k1_white = Knight.new(:no_color)
     k2_white = Knight.new(:no_color)
     set_figure(k1_white, [7, 1])
     set_figure(k2_white, [7, 6])
-    #@board[get_index([7, 1])].content = k1_white
-    #@board[get_index([7, 6])].content = k2_white
 
     # bishop
     b1_white = Bishop.new(:no_color)
     b2_white = Bishop.new(:no_color)
     set_figure(b1_white, [7, 2])
     set_figure(b2_white, [7, 5])
-    #@board[get_index([7, 2])].content = b1_white
-    #@board[get_index([7, 5])].content = b2_white
 
     # queen
     q_white = Queen.new(:no_color)
     set_figure(q_white, [7, 3])
-    #@board[get_index([7, 3])].content = q_white
 
     # king
     ki_white = King.new(:no_color)
     set_figure(ki_white, [7, 4])
-    #@board[get_index([7, 4])].content = ki_white
   end
-
 end

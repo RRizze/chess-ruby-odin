@@ -6,11 +6,13 @@ class Figure
   attr_reader :color, :directions
   attr_reader :token
   attr_reader :token_bg
+  attr_accessor :has_move
 
   def initialize(color)
     @token = ""
     @directions = []
     @color = color
+    @has_move = false
   end
 
   def set_token_bg(bg)
