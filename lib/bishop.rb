@@ -1,10 +1,10 @@
-require_relative "figure"
+require_relative "piece"
 
-class Bishop < Figure
+class Bishop < Piece
 
   def initialize(color)
     super(color)
     @token = "♝ "
-    @directions = []
+    @directions = [[1, 1], [-1, 1], [1, -1], [-1, -1]]
   end
 end

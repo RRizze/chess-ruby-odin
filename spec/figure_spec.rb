@@ -1,4 +1,4 @@
-require "./lib/figure.rb"
+require "./lib/piece.rb"
 
-describe Figure do
+describe Piece do
 end

@@ -1,15 +1,8 @@
 #!/usr/bin/sh ruby
+
 require_relative "board"
-require_relative "queen"
+require_relative "game"
 
-class Game
+game = Game.new
+game.loop
 
-
-end
-
-board = Board.new
-board.print_board
-
-board.move("e2-e3")
-board.move("b8-c6")
-board.print_board

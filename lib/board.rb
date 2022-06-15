@@ -43,13 +43,13 @@ class Board
     board
   end
 
-  def set_figure(figure, pos)
+  def set_piece(piece, pos)
     index = get_index(pos)
     bg_color = @board[index].color
     # update bg color
-    figure.set_token_bg(bg_color)
+    piece.set_token_bg(bg_color)
 
-    @board[index].content = figure
+    @board[index].content = piece
   end
 
   def print_board
@@ -93,17 +93,6 @@ class Board
   end
 
   def valid_moves(move)
-    figure_from = @board[get_index(move[0])].content
-    figure_to = @board[get_index(move[1])].content
-
-    case figure_from.class
-    when Pawn
-      valid_moves = moves(move)
-      return valid_moves
-    end
-  end
-
-  def moves(move)
     cell_from = @board[get_index(move[0])]
     cell_to = @board[get_index(move[1])]
 
@@ -118,8 +107,8 @@ class Board
       if current == move[1]
         break;
       end
-      figure = cell_from.content
-      neighbors = neighbors(current, figure)
+      piece = cell_from.content
+      neighbors = neighbors(current, piece)
       for next_pos in neighbors
         if !came_from.has_key?(next_pos)
           frontier.push(next_pos)
@@ -137,35 +126,75 @@ class Board
     return res
   end
 
-  def neighbors(from, figure)
+  def neighbors(from, piece)
     result = []
-    dirs = figure.get_directions
+    dirs = piece.get_directions
     for dir in dirs
-      result.push([
+      new_pos = [
         from[0] + dir[0],
         from[1] + dir[1]
-      ])
+      ]
+      p new_pos
+
+      if in_bounds?(new_pos)
+        if cell_is_empty?(new_pos)
+          result.push(new_pos)
+        else 
+          if !same_colors?(from, new_pos)
+            result.push(new_pos)
+          end
+        end
+      end
+
     end
     return result
   end
 
+  def in_bounds?(pos)
+    if (pos[0] >= 0 and pos[0] < @rows and
+        pos[1] >= 0 and pos[1] < @columns)
+      return true
+    else
+      return false
+    end
+  end
+
+  def same_colors?(from, to)
+    from_idx = get_index(from)
+    to_idx = get_index(to)
+    #p @board[from_idx]
+    #p @board[to_idx]
+    if !cell_is_empty?(to) && !cell_is_empty?(from)
+      if @board[from_idx].content.color == @board[to_idx].content.color
+        return true
+      else
+        return false
+      end
+    end
+  end
 
   def move(movement)
-    pos = movement_to_arr(movement)
-    from = pos[0]
-    to = pos[1]
-    # check valid moves for figure
-    valid_moves = valid_moves(figure, to)
+    move_arr = movement_to_arr(movement)
+    from = move_arr[0]
+    to = move_arr[1]
 
-    if valid_moves.length > 0
-      cell = @board[get_index(from)]
-      figure = cell.content
+    if cell_is_empty?(from)
+      return false
+    end
+    # check valid moves for piece
+    valid_moves = valid_moves(move_arr)
+    # TODO KNIGHT PROBLEM MOVES
+
+    # or valid_moves.include?(move)
+    if valid_moves.length > 0 || valid_moves.include?(move_arr)
+      cell_from = @board[get_index(from)]
+      piece = cell_from.content
       # clear cell
-      cell.content = colorize("  ", :no_color, cell.color)
+      cell_from.content = colorize("  ", :no_color, cell_from.color)
+      set_piece(piece, to)
+      return true
     end
 
-
-    set_figure(figure, to)
   end
 
   private
@@ -174,65 +203,65 @@ class Board
     # pawns
     (0..7).each do |col|
       p_black = Pawn.new(:black)
-      set_figure(p_black, [1, col])
+      set_piece(p_black, [1, col])
     end
 
     (0..7).each do |col|
       p_white = Pawn.new(:no_color)
-      set_figure(p_white, [6, col])
+      set_piece(p_white, [6, col])
     end
 
     # rook
     r1_black = Rook.new(:black)
     r2_black = Rook.new(:black)
-    set_figure(r1_black, [0, 0])
-    set_figure(r2_black, [0, 7])
+    set_piece(r1_black, [0, 0])
+    set_piece(r2_black, [0, 7])
 
     # knight
     k1_black = Knight.new(:black)
     k2_black = Knight.new(:black)
-    set_figure(k1_black, [0, 1])
-    set_figure(k2_black, [0, 6])
+    set_piece(k1_black, [0, 1])
+    set_piece(k2_black, [0, 6])
 
     # bishop
     b1_black = Bishop.new(:black)
     b2_black = Bishop.new(:black)
-    set_figure(b1_black, [0, 2])
-    set_figure(b2_black, [0, 5])
+    set_piece(b1_black, [0, 2])
+    set_piece(b2_black, [0, 5])
 
     # queen
     q_black = Queen.new(:black)
-    set_figure(q_black, [0, 3])
+    set_piece(q_black, [0, 3])
 
     # king
     ki_black = King.new(:black)
-    set_figure(ki_black, [0, 4])
+    set_piece(ki_black, [0, 4])
 
     # white
     # rook
     r1_white = Rook.new(:no_color)
     r2_white = Rook.new(:no_color)
-    set_figure(r1_white, [7, 0])
-    set_figure(r2_white, [7, 7])
+    set_piece(r1_white, [7, 0])
+    set_piece(r2_white, [7, 7])
 
     # knight
     k1_white = Knight.new(:no_color)
     k2_white = Knight.new(:no_color)
-    set_figure(k1_white, [7, 1])
-    set_figure(k2_white, [7, 6])
+    set_piece(k1_white, [7, 1])
+    set_piece(k2_white, [7, 6])
 
     # bishop
     b1_white = Bishop.new(:no_color)
     b2_white = Bishop.new(:no_color)
-    set_figure(b1_white, [7, 2])
-    set_figure(b2_white, [7, 5])
+    set_piece(b1_white, [7, 2])
+    set_piece(b2_white, [7, 5])
 
     # queen
     q_white = Queen.new(:no_color)
-    set_figure(q_white, [7, 3])
+    set_piece(q_white, [7, 3])
 
     # king
     ki_white = King.new(:no_color)
-    set_figure(ki_white, [7, 4])
+    set_piece(ki_white, [7, 4])
   end
 end

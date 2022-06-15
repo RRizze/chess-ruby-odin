@@ -1,6 +1,6 @@
-require_relative "figure"
+require_relative "piece"
 
-class Queen < Figure
+class Queen < Piece
 
   def initialize(color)
     super(color)
