@@ -93,24 +93,38 @@ class Board
   end
 
   def valid_moves(move)
+    goal = move[1]
     cell_from = @board[get_index(move[0])]
-    cell_to = @board[get_index(move[1])]
+    cell_to = @board[get_index(goal)]
 
     frontier = []
     frontier.push(move[0])
+    visited = Set.new()
     came_from = {} # a->b came_from[b] = a
     # if I will need path
     came_from[move[0]] = nil
 
+    piece = cell_from.content
+
     while !frontier.empty?
       current = frontier.shift
-      if current == move[1]
-        break;
+
+      if same_colors?(current, goal)
+        return []
       end
-      piece = cell_from.content
-      neighbors = neighbors(current, piece)
+
+      if !visited.include?(current)
+        visited.add(current)
+        # process with current
+        if current == goal
+          break;
+        end
+      end
+
+      neighbors = neighbors(current, goal, piece)
+
       for next_pos in neighbors
-        if !came_from.has_key?(next_pos)
+        if !visited.include?(next_pos)
           frontier.push(next_pos)
           came_from[next_pos] = current
         end
@@ -126,7 +140,7 @@ class Board
     return res
   end
 
-  def neighbors(from, piece)
+  def neighbors(from, goal, piece)
     result = []
     dirs = piece.get_directions
     for dir in dirs
@@ -134,15 +148,19 @@ class Board
         from[0] + dir[0],
         from[1] + dir[1]
       ]
-      p new_pos
+
+      if new_pos == goal
+        result.push(new_pos)
+        return result
+      end
 
       if in_bounds?(new_pos)
         if cell_is_empty?(new_pos)
           result.push(new_pos)
-        else 
-          if !same_colors?(from, new_pos)
-            result.push(new_pos)
-          end
+        elsif !same_colors?(from, new_pos) && !cell_is_empty?(new_pos)
+          result.push(new_pos)
+        #elsif same_colors?(from, new_pos)
+          #return []
         end
       end
 
@@ -162,8 +180,7 @@ class Board
   def same_colors?(from, to)
     from_idx = get_index(from)
     to_idx = get_index(to)
-    #p @board[from_idx]
-    #p @board[to_idx]
+
     if !cell_is_empty?(to) && !cell_is_empty?(from)
       if @board[from_idx].content.color == @board[to_idx].content.color
         return true
@@ -184,6 +201,9 @@ class Board
     # check valid moves for piece
     valid_moves = valid_moves(move_arr)
     # TODO KNIGHT PROBLEM MOVES
+    if valid_moves.length == 0
+      return false
+    end
 
     # or valid_moves.include?(move)
     if valid_moves.length > 0 || valid_moves.include?(move_arr)

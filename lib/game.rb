@@ -41,7 +41,7 @@ class Game
       print "Make your move: "
       move = gets.chomp
       board.move(move)
-#      clear_screen
+      clear_screen
     end
   end
 

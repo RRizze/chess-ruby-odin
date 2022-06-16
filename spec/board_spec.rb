@@ -67,8 +67,18 @@ describe Board do
         # black piece
         piece = board.board[board.get_index([1, 0])].content
         # first move
-        res = board.neighbors([1, 0], piece)
+        res = board.neighbors([1, 0], [3, 0], piece)
         expect(res).to eq([[2, 0], [3, 0]])
+      end
+
+      it "returns neighbors for knight" do
+        board = Board.new
+        # black piece
+        knight = board.board[board.get_index([7, 1])].content
+        # first move
+        neighbors = board.neighbors([7, 1], [6, 3], knight)
+        res = neighbors.include?([5,0]) and neighbors.include?([5,2])
+        expect(res).to be true
       end
     end
 
@@ -77,14 +87,14 @@ describe Board do
         board = Board.new
         move = [[1, 0], [2, 0]]
         valid_moves = board.valid_moves(move)
-        expect(valid_moves).to eq([[[1, 0], [2, 0]], [[1, 0], [3, 0]]])
+        expect(valid_moves).to eq([[[1, 0], [2, 0]]])
       end
 
-      it "returns available moves for particular piece" do
+      it "returns empty array for incorrect move for particular piece" do
         board = Board.new
-        move = [[1, 0], [2, 0]]
+        move = [[7, 1], [6, 3]]
         valid_moves = board.valid_moves(move)
-        expect(valid_moves).to eq([[[1, 0], [2, 0]], [[1, 0], [3, 0]]])
+        expect(valid_moves).to eq([])
       end
     end
 
@@ -132,9 +142,6 @@ describe Board do
 
           expect(res).to be false
         end
-      end
-
-      describe "Knight #move" do
       end
 
     end
