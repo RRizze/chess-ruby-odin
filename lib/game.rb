@@ -1,4 +1,5 @@
 require_relative "board"
+require_relative "player"
 
 class Game
 
@@ -24,7 +25,7 @@ class Game
 
   def choose_mode
     mode_txt = <<~HEREDOC
-      "Choose your mode:
+      Choose your mode:
         'pvp' - Human vs Human
         'ai' - Human vs Computer
 
@@ -32,15 +33,46 @@ class Game
     puts mode_txt
   end
 
+  def do_move_txt(player, success)
+    move_txt = <<~HEREDOC
+      Your moves should be like: 'e3-e4'
+
+    HEREDOC
+    move_player_txt = "#{player[:color].to_s.capitalize} player does move: "
+    err = "Wrong piece or move!!! "
+
+    if success
+      puts move_txt
+      print move_player_txt
+    else
+      puts move_txt
+      print err, move_player_txt
+    end
+  end
+
   def pvp_start
     board = Board.new
+    players = [Player.new(:white), Player.new(:black)]
+    current_player = players[0]
 
     while true
       board.print_board
-      puts "Your moves should be like: 'e3-e4'"
-      print "Make your move: "
+      do_move_txt(current_player, true)
+
       move = gets.chomp
-      board.move(move)
+      success = false
+
+      until success = board.move(move, current_player) do
+        clear_lines(3)
+        do_move_txt(current_player, success)
+        move = gets.chomp
+      end
+
+      if current_player.color == :white
+        current_player = players[1]
+      else
+        current_player = players[0]
+      end
       clear_screen
     end
   end

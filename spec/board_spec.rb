@@ -1,5 +1,6 @@
 require "./lib/board.rb"
 require "./lib/queen.rb"
+require "./lib/player.rb"
 
 describe Board do
 
@@ -130,7 +131,8 @@ describe Board do
         it "returns true AND place piece on the target cell if is empty" do
           path = "e2-e3"
           board = Board.new
-          res = board.move(path)
+          player = Player.new(:white)
+          res = board.move(path, player)
 
           expect(res).to be true
         end
@@ -138,7 +140,8 @@ describe Board do
         it "returns FALSE and should do nothing with empty cells" do
           path = "d3-d4"
           board = Board.new
-          res = board.move(path)
+          player = Player.new(:white)
+          res = board.move(path, player)
 
           expect(res).to be false
         end

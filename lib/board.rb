@@ -83,6 +83,13 @@ class Board
   end
 
   def movement_to_arr(movement)
+    regexp = Regexp.new(/([a-h]{1,1}[0-7]{1,1})-([a-h]{1,1}[0-7]{1,1})/)
+    match = movement.match?(regexp)
+
+    if !match
+      return false
+    end
+
     movement_arr = movement.split("-")
     pos = movement_arr.map do |move|
       row = LABELS[:letters].index(move[0])
@@ -190,17 +197,29 @@ class Board
     end
   end
 
-  def move(movement)
+  def move(movement, player)
     move_arr = movement_to_arr(movement)
+
+    return false if !move_arr
     from = move_arr[0]
     to = move_arr[1]
 
     if cell_is_empty?(from)
       return false
     end
+
+    # check for correct player color
+    piece_color = @board[get_index(from)].content.color
+
+    if player[:color] == :white and piece_color == :black
+        return false
+    elsif player[:color] == :black and piece_color == :no_color
+      return false
+    end
+
     # check valid moves for piece
     valid_moves = valid_moves(move_arr)
-    # TODO KNIGHT PROBLEM MOVES
+
     if valid_moves.length == 0
       return false
     end

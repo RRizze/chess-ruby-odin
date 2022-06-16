@@ -1,0 +1,1 @@
+Player = Struct.new(:color)
