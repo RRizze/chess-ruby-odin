@@ -63,7 +63,7 @@ class Game
       success = false
 
       until success = board.move(move, current_player) do
-        clear_lines(3)
+        #clear_lines(3)
         do_move_txt(current_player, success)
         move = gets.chomp
       end
@@ -73,7 +73,7 @@ class Game
       else
         current_player = players[0]
       end
-      clear_screen
+      #clear_screen
     end
   end
 

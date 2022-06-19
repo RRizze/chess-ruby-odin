@@ -149,7 +149,18 @@ class Board
 
   def neighbors(from, goal, piece)
     result = []
-    dirs = piece.get_directions
+    dirs = nil
+
+    if piece.is_a?(Pawn)
+      if !cell_is_empty?(goal) or passant_capture?(from, goal)
+        dirs = piece.get_directions(true)
+      else
+        dirs = piece.get_directions(false)
+      end
+    else
+      dirs = piece.get_directions
+    end
+
     for dir in dirs
       new_pos = [
         from[0] + dir[0],
@@ -166,12 +177,10 @@ class Board
           result.push(new_pos)
         elsif !same_colors?(from, new_pos) && !cell_is_empty?(new_pos)
           result.push(new_pos)
-        #elsif same_colors?(from, new_pos)
-          #return []
         end
       end
-
     end
+
     return result
   end
 
@@ -197,6 +206,26 @@ class Board
     end
   end
 
+  def passant_capture?(from, to)
+    # color doesn't matter
+
+    from_idx = get_index(from)
+    to_idx = get_index(to)
+    piece_from = @board[from_idx].content
+
+    pos_left = [from[0],  (from[1] - 1)]
+    pos_right = [from[0], (from[1] + 1)]
+    cell_left = @board[get_index(pos_left)]
+    cell_right = @board[get_index(pos_right)]
+
+    if (cell_left.content.is_a?(Pawn) and cell_left.content.jumped?) or
+        (cell_right.content.is_a?(Pawn) and cell_right.content.jumped?)
+      return true
+    else
+      return false
+    end
+  end
+
   def move(movement, player)
     move_arr = movement_to_arr(movement)
 
@@ -211,9 +240,8 @@ class Board
     # check for correct player color
     piece_color = @board[get_index(from)].content.color
 
-    if player[:color] == :white and piece_color == :black
-        return false
-    elsif player[:color] == :black and piece_color == :no_color
+    if (player[:color] == :white and piece_color == :black or
+       player[:color] == :black and piece_color == :no_color)
       return false
     end
 
@@ -224,15 +252,31 @@ class Board
       return false
     end
 
-    # or valid_moves.include?(move)
-    if valid_moves.length > 0 || valid_moves.include?(move_arr)
-      cell_from = @board[get_index(from)]
-      piece = cell_from.content
-      # clear cell
-      cell_from.content = colorize("  ", :no_color, cell_from.color)
-      set_piece(piece, to)
-      return true
+    has_endpoint = false
+    valid_moves.each do |v_move|
+      if v_move.include?(move_arr[1])
+        has_endpoint = true
+      end
     end
+
+    if !has_endpoint
+      return false
+    end
+
+    cell_from = @board[get_index(from)]
+    piece = cell_from.content
+    if piece.is_a?(Pawn) and (to[1] - from[1]).abs == 2 and piece.moves == 0
+        piece.jump = true
+        piece.moves += 1
+    end
+
+    # clear cell
+    cell_from.content = colorize("  ", :no_color, cell_from.color)
+    set_piece(piece, to)
+    if piece.is_a?(Pawn)
+      piece.moves += 1
+    end
+    return true
 
   end
 

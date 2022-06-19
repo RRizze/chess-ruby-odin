@@ -1,5 +1,6 @@
 require "./lib/board.rb"
 require "./lib/queen.rb"
+require "./lib/pawn.rb"
 require "./lib/player.rb"
 
 describe Board do
@@ -86,9 +87,9 @@ describe Board do
     describe "#valid_moves" do
       it "returns available moves for particular piece" do
         board = Board.new
-        move = [[1, 0], [2, 0]]
+        move = [[1, 0], [3, 0]]
         valid_moves = board.valid_moves(move)
-        expect(valid_moves).to eq([[[1, 0], [2, 0]]])
+        expect(valid_moves).to eq([[[1, 0], [2, 0]], [[2, 0], [3, 0]]])
       end
 
       it "returns empty array for incorrect move for particular piece" do
@@ -129,7 +130,7 @@ describe Board do
 
       describe "#move" do
         it "returns true AND place piece on the target cell if is empty" do
-          path = "e2-e3"
+          path = "c2-c4"
           board = Board.new
           player = Player.new(:white)
           res = board.move(path, player)
@@ -144,6 +145,29 @@ describe Board do
           res = board.move(path, player)
 
           expect(res).to be false
+        end
+      end
+
+      describe "#passant_capture?" do
+        it "returns true if pawn was captured by other one" do
+          board = Board.new
+          #piece = Pawn.new(:white)
+          from = [3, 1] #b5
+          to = [2, 0] #a6
+          #board.set_piece(piece, from)
+          player_b = Player.new(:black)
+          player_w = Player.new(:white)
+
+          board.move("c2-c4", player_w)
+          board.move("h7-h6", player_b)
+
+          board.move("c4-c5", player_w)
+          board.move("b7-b5", player_b)
+
+          res = board.move("c5-b6", player_w)
+
+          #res = board.passant_capture?(from, to)
+          expect(res).to be true
         end
       end
 
