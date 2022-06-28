@@ -10,10 +10,10 @@ describe King do
       expect(res).to be false
     end
 
-    xit "returns false if piece cant moves for incorrect direction" do
+    it "returns false if length of move is more than 1" do
       board = Board.new
-      piece = board.get_piece([1, 1])
-      destination = [3, 3]
+      piece = King.new(:black, [2, 2], board)
+      destination = [4, 4]
       res = piece.can_move?(destination)
       expect(res).to be false
     end

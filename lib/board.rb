@@ -317,22 +317,6 @@ class Board
 
   end
 
-  def get_unit_vector(pos)
-    x = pos[0] == 0 ? 0 : pos[0] / (pos[0]).abs
-    y = pos[1] == 0 ? 0 : pos[1] / (pos[1]).abs
-
-    return [x, y]
-  end
-
-  def get_direction(from, to)
-    new_pos = [
-      to[0] - from[0],
-      to[1] - from[1]
-    ]
-
-    return get_unit_vector(new_pos)
-  end
-
   def checkmate?(color)
     #1. pos king white\black  -> index or [x, y]?
     #king = nil

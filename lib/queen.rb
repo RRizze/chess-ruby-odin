@@ -22,7 +22,7 @@ class Queen < Piece
     end
 
     # find direction to move
-    direction = @board.get_direction(@position, destination)
+    direction = get_direction(@position, destination)
 
     # false if movement is a not straight or diagonal line
     if !@directions.include?(direction)

@@ -15,15 +15,10 @@ class King < Piece
     # false if piece at the destination has same color
     possible_piece = @board.get_piece(destination)
 
-    if !possible_piece
+    if possible_piece
       if possible_piece.color == @color
         return false
       end
-    end
-
-    # false if movement is not diagonal or straight line
-    if (@position[0] - destination[0]).abs != (@position[1] - destination[1]).abs and (@position[0] != destination[0] and @position[1] != destination[1])
-      return false
     end
 
     # false if length of move is more than 1
@@ -31,8 +26,7 @@ class King < Piece
       return false
     end
 
-  
-    direction = @board.get_direction(@position, destination)
+    direction = get_direction(@position, destination)
 
     # can't move to the danger zone
     danger = is_danger?(destination)
@@ -65,7 +59,7 @@ class King < Piece
         row_down -= 1
         next
       else
-        piece = @board.get_piece([row_row, dest_col])
+        piece = @board.get_piece([row_down, dest_col])
 
         if piece.color == @color
           break;
