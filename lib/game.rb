@@ -62,6 +62,7 @@ class Game
       move = gets.chomp
       success = false
 
+      # TODO change success logic
       until success = board.move(move, current_player) do
         clear_lines(3)
         do_move_txt(current_player, success)

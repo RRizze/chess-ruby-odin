@@ -4,14 +4,12 @@ class Pawn < Piece
   attr_accessor :jump
   attr_accessor :moves
 
-  def initialize(color)
-    super(color)
+  def initialize(color, position, board)
+    super(color, position, board)
     @moves = 0
     @token = "♟ "
-    @directions = [[1, 0]] 
-    @diag_moves_black = [[1, -1], [1, 1]]
-    @diag_moves_white = [[-1, -1], [-1, 1]]
-    @first_move = [[2, 0]]
+    @directions_black = [[1, 0], [2, 0], [1, -1], [1, 1]]
+    @directions_white = [[-1, 0], [-2, 0], [-1, 1], [-1, -1]]
     @jump = false
   end
 
@@ -19,51 +17,73 @@ class Pawn < Piece
     @jump
   end
 
-  def get_directions(has_diag = false)
-    #first move
-    if @moves == 0
-      if @color == :black
-        if has_diag
-          return @directions + @first_move + @diag_moves_black
-        else
-          return @directions + @first_move
-        end
-      else
-        arr = @directions + @first_move
-        res = arr.map do |move|
-          x = move[0] * (-1)
-          y = move[1] * (-1)
-          [x, y]
-        end
+  def can_move?(destination)
+    # false if piece at the destination has same color
+    possible_piece = @board.get_piece(destination)
 
-        if has_diag
-          return res + @diag_moves_white
-        else
-          return res
-        end
-      end
-    # not first move
-    else
-      if @color == :black
-        if has_diag
-          return @directions + @diag_moves_black
-        else
-          return @directions
-        end
-      else
-        res = @directions.map do |move|
-          x = move[0] * (-1)
-          y = move[1] * (-1)
-          [x, y]
-        end
-
-        if has_diag
-          return res + @diag_moves_white
-        else
-          return res
-        end
+    if possible_piece
+      if possible_piece.color == @color
+        return false
       end
     end
+
+    # find direction to move
+    direction = get_direction(@position, destination)
+
+    if direction.length == 0
+      return false
+    end
+
+    # can't jump over pieces
+    if direction[0].abs == 2
+      middle_x = direction[0] > 0 ? 1 : -1
+
+      if !@board.cell_is_empty?([position[0] + middle_x, position[1]])
+        return false
+      end
+    end
+
+    # can't moves diagonal to empty cells 
+    if @board.cell_is_empty?(destination) and direction[1] != 0
+      return false
+    end
+
+
+    return true
+
+  end
+
+  def get_direction(from, to)
+    #first move
+    if @moves == 0
+      if ((to[0] - from[0]).abs == 2) and (to[1] == from[1])
+        case @color
+        when :no_color
+          return [-2, 0]
+        when :black
+          return [2, 0]
+        end
+
+      elsif (to[0] - from[0]).abs == 1 and (to[1] - from[1]).abs == 1
+        return [ to[0] - from[0], to[1] - from[1] ]
+      else
+        return []
+      end
+    else
+      if ((to[0] - from[0]).abs == 1) and (to[1] == from[1])
+        case @color
+        when :no_color
+          return [-1, 0]
+        when :black
+          return [1, 0]
+        end
+      elsif (to[0] - from[0]).abs == 1 and (to[1] == from[1]).abs == 1
+        return [ to[0] - from[0], to[1] - from[1] ]
+      else
+        return []
+      end
+    end
+    return []
   end
 
 end

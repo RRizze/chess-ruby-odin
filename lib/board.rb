@@ -52,6 +52,15 @@ class Board
     @board[index].content = piece
   end
 
+  def remove_piece(pos)
+    cell = @board[get_index(pos)]
+    cell.content = colorize("  ", :no_color, cell.color)
+  end
+
+  def get_index(pos)
+    pos[0] * @columns + pos[1]
+  end
+
   def print_board
     cell_str = ""
     puts " " + LABELS[:letters].join(" ")
@@ -66,7 +75,7 @@ class Board
           cell_str += @board[pos].content.token_bg
         end
       end
-      cell_str += "#{row+1}"
+      cell_str += "#{@rows-row}"
       cell_str += "\n"
     end
     print cell_str
@@ -76,10 +85,6 @@ class Board
   def cell_is_empty?(pos)
     index = get_index(pos)
     @board[index].content.is_a?(String)
-  end
-
-  def get_index(pos)
-    pos[0] * @columns + pos[1]
   end
 
   def movement_to_arr(movement)
@@ -132,7 +137,6 @@ class Board
       end
 
       neighbors = neighbors(current, to, piece, direction)
-      #p "neighbors for #{move[0]}, #{move[1]}", neighbors
 
       if neighbors.include?(to)
         for next_pos in neighbors
@@ -148,7 +152,6 @@ class Board
         end
       end
     end
-    #p came_from
 
     res = []
     for to, from in came_from
@@ -156,8 +159,6 @@ class Board
         res.push([from, to])
       end
     end
-    #p "res: #{res[0]} ##{res[1]}"
-    #p res
 
     return res
   end
@@ -177,7 +178,6 @@ class Board
     end
 
     dirs = dirs.select { |dir| get_unit_vector(dir) == direction }
-    #p "dirs from: #{from}, to #{to}", dirs 
 
     for dir in dirs
       new_pos = [
@@ -255,10 +255,19 @@ class Board
     end
   end
 
+  def get_piece(pos)
+    if cell_is_empty?(pos)
+      return false
+    else
+      return @board[get_index(pos)].content
+    end
+  end
+
   def move(movement, player)
     move_arr = movement_to_arr(movement)
 
     return false if !move_arr
+
     from = move_arr[0]
     to = move_arr[1]
 
@@ -266,12 +275,16 @@ class Board
       return false
     end
 
+    piece = get_piece(from)
     # check for correct player color
-    piece_color = @board[get_index(from)].content.color
 
-    if (player[:color] == :white and piece_color == :black or
-       player[:color] == :black and piece_color == :no_color)
+    if (player[:color] == :white and piece.color == :black or
+       player[:color] == :black and piece.color == :no_color)
       return false
+    end
+
+    if piece.can_move(to)
+      # do logic
     end
 
     # check valid moves for piece
@@ -293,7 +306,8 @@ class Board
     # clear cell
     #if passant_capture?(from, to)
 
-    cell_from.content = colorize("  ", :no_color, cell_from.color)
+    remove_piece(from)
+    #cell_from.content = colorize("  ", :no_color, cell_from.color)
     set_piece(piece, to)
     if piece.is_a?(Pawn)
       piece.moves += 1
@@ -319,71 +333,120 @@ class Board
     return get_unit_vector(new_pos)
   end
 
+  def checkmate?(color)
+    #1. pos king white\black  -> index or [x, y]?
+    #king = nil
+    #(0..7).each do |row|
+      #(0..7).each do |col|
+        #content = @board(get_index([row, col]).content
+          #if content.is_a?(King) && content.color == color?
+            #pos_king = [row, col]
+          #end
+      #end
+    #end
+    #"checkmate"
+    # 
+    #2. if length path == 1 and there's path -> check?
+    #3 possible moves? valid_moves?
+  end
+  
+  def multiply_pos(pos, num)
+    return [pos[0] * num, pos[1] * num]
+  end
+
+  def king_in_check(player)
+    # player should track its king position?
+    # assume i know king's pos
+    king_white_pos = [7, 4]
+    king_black_pos = [0, 4]
+  
+    king_dirs = [[] ,[]]
+
+    check = false
+
+    num = 1
+    index = 0
+    until king_dirs.empty?
+      check_pos = king_white_pos + king_dirs[i]
+      """
+      if figure in check_pos has another color
+        delete direction? but knight?
+        OR check knights
+            check bishops
+            check rooks
+            check queen
+            check king
+            check pawns
+     """
+    end
+
+  end
+
   private
 
   def init
     # pawns
     (0..7).each do |col|
-      p_black = Pawn.new(:black)
+      p_black = Pawn.new(:black, [1, col], self)
       set_piece(p_black, [1, col])
     end
 
     (0..7).each do |col|
-      p_white = Pawn.new(:no_color)
+      p_white = Pawn.new(:no_color, [6, col], self)
       set_piece(p_white, [6, col])
     end
 
     # rook
-    r1_black = Rook.new(:black)
-    r2_black = Rook.new(:black)
+    r1_black = Rook.new(:black, [0, 0], self)
+    r2_black = Rook.new(:black, [0, 7], self)
     set_piece(r1_black, [0, 0])
     set_piece(r2_black, [0, 7])
 
     # knight
-    k1_black = Knight.new(:black)
-    k2_black = Knight.new(:black)
+    k1_black = Knight.new(:black, [0, 1], self)
+    k2_black = Knight.new(:black, [0, 6], self)
     set_piece(k1_black, [0, 1])
     set_piece(k2_black, [0, 6])
 
     # bishop
-    b1_black = Bishop.new(:black)
-    b2_black = Bishop.new(:black)
+    b1_black = Bishop.new(:black, [0, 2], self)
+    b2_black = Bishop.new(:black, [0, 5], self)
     set_piece(b1_black, [0, 2])
     set_piece(b2_black, [0, 5])
 
     # queen
-    q_black = Queen.new(:black)
+    q_black = Queen.new(:black, [0, 3], self)
     set_piece(q_black, [0, 3])
 
     # king
-    ki_black = King.new(:black)
+    ki_black = King.new(:black, [0, 4], self)
     set_piece(ki_black, [0, 4])
 
     # white
     # rook
-    r1_white = Rook.new(:no_color)
-    r2_white = Rook.new(:no_color)
+    r1_white = Rook.new(:no_color, [7, 0], self)
+    r2_white = Rook.new(:no_color, [7, 7], self)
     set_piece(r1_white, [7, 0])
     set_piece(r2_white, [7, 7])
 
     # knight
-    k1_white = Knight.new(:no_color)
-    k2_white = Knight.new(:no_color)
+    k1_white = Knight.new(:no_color, [7, 1], self)
+    k2_white = Knight.new(:no_color, [7, 6], self)
     set_piece(k1_white, [7, 1])
     set_piece(k2_white, [7, 6])
 
     # bishop
-    b1_white = Bishop.new(:no_color)
-    b2_white = Bishop.new(:no_color)
+    b1_white = Bishop.new(:no_color, [7, 2], self)
+    b2_white = Bishop.new(:no_color, [7, 5], self)
     set_piece(b1_white, [7, 2])
     set_piece(b2_white, [7, 5])
 
     # queen
-    q_white = Queen.new(:no_color)
+    q_white = Queen.new(:no_color, [7, 3], self)
     set_piece(q_white, [7, 3])
 
     # king
-    ki_white = King.new(:no_color)
+    ki_white = King.new(:no_color, [7, 4], self)
     set_piece(ki_white, [7, 4])
   end
 end
