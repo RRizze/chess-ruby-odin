@@ -21,7 +21,6 @@ class Board
     @rows = 8
     @columns = 8
     @board = create_board(@rows, @columns)
-    init()
   end
 
   def create_board(w, h)
@@ -366,9 +365,7 @@ class Board
 
   end
 
-  private
-
-  def init
+  def fill
     # pawns
     (0..7).each do |col|
       p_black = Pawn.new(:black, [1, col], self)

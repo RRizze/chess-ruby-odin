@@ -6,6 +6,7 @@ describe Bishop do
   describe "#can_move?" do
     it "returns false if piece cant moves if same piece is there" do
       board = Board.new
+      board.fill()
       piece = board.get_piece([0, 2])
       destination = [1, 3]
       res = piece.can_move?(destination)
@@ -14,6 +15,7 @@ describe Bishop do
 
     it "returns false if piece cant jumps over" do
       board = Board.new
+      board.fill()
       piece = board.get_piece([0, 2])
       destination = [2, 4]
       res = piece.can_move?(destination)

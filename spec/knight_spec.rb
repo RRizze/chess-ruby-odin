@@ -6,6 +6,7 @@ describe Knight do
   describe "#can_move?" do
     it "returns false if piece cant move if same piece is there" do
       board = Board.new
+      board.fill()
       piece = board.get_piece([0, 1])
       destination = [1, 3]
       res = piece.can_move?(destination)
@@ -30,6 +31,7 @@ describe Knight do
 
     it "returns true if piece can jump over" do
       board = Board.new
+      board.fill()
       piece = board.get_piece([0, 1])
       destination = [2, 2]
       res = piece.can_move?(destination)
@@ -38,6 +40,7 @@ describe Knight do
 
     it "returns false if piece cant do big jump" do
       board = Board.new
+      board.fill()
       piece = board.get_piece([0, 1])
       destination = [3, 2]
       res = piece.can_move?(destination)

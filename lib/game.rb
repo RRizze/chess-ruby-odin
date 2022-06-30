@@ -52,6 +52,8 @@ class Game
 
   def pvp_start
     board = Board.new
+    board.fill()
+
     players = [Player.new(:white), Player.new(:black)]
     current_player = players[0]
 

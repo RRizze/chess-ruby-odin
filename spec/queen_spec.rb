@@ -6,6 +6,7 @@ describe Queen do
   describe "#can_move?" do
     it "returns false if piece cant moves if same piece is there" do
       board = Board.new
+      board.fill()
       piece = board.get_piece([0, 3])
       destination = [1, 3]
       res = piece.can_move?(destination)
@@ -30,6 +31,7 @@ describe Queen do
 
     it "returns false if piece cant jumps over" do
       board = Board.new
+      board.fill()
       piece = board.get_piece([0, 3])
       destination = [2, 3]
       res = piece.can_move?(destination)
