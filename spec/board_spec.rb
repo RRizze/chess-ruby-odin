@@ -32,6 +32,7 @@ describe Board do
     it "returns false if cell is not empty" do
       pos = [0, 0]
       board = Board.new
+      board.fill()
       res = board.cell_is_empty?(pos)
       expect(res).to be false
     end

@@ -33,11 +33,12 @@ class Game
     puts mode_txt
   end
 
-  def do_move_txt(player, success)
+  def txt_move(player, success)
     move_txt = <<~HEREDOC
       Your moves should be like: 'e3-e4'
 
     HEREDOC
+
     move_player_txt = "#{player[:color].to_s.capitalize} player does move: "
     err = "Wrong piece or move!!! "
 
@@ -54,20 +55,34 @@ class Game
     board = Board.new
     board.fill()
 
-    players = [Player.new(:white), Player.new(:black)]
+    king_w = board.get_piece([0, 4])
+    king_b = board.get_piece([7, 4])
+
+    players = [Player.new(:white, king_w), Player.new(:black, king_b)]
+
     current_player = players[0]
 
     while true
       board.print_board
-      do_move_txt(current_player, true)
 
+      # check for 'check' and 'checkmate'
+      res = current_player[:king].checkmate?()
+
+      if res == :check
+      elsif res == :checkmate
+        print "#{current_player[:color].to_s.capitalize} is lost. Game over."
+        break
+      end
+
+      txt_move(current_player, true)
       move = gets.chomp
-      success = false
+
+      #success = false
 
       # TODO change success logic
       until success = board.move(move, current_player) do
         clear_lines(3)
-        do_move_txt(current_player, success)
+        txt_move(current_player, success)
         move = gets.chomp
       end
 

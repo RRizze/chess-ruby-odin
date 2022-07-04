@@ -10,7 +10,7 @@ require_relative "color"
 
 class Board
   include Color
-  attr_accessor :board
+  attr_accessor :board, :whites, :blacks
 
   LABELS = {
     letters: ["a", "b", "c", "d", "e", "f", "g", "h"],
@@ -21,6 +21,8 @@ class Board
     @rows = 8
     @columns = 8
     @board = create_board(@rows, @columns)
+    @whites = []
+    @blacks = []
   end
 
   def create_board(w, h)
@@ -53,6 +55,16 @@ class Board
 
   def remove_piece(pos)
     cell = @board[get_index(pos)]
+    piece = get_piece(pos)
+    if piece.color == :black
+      @blacks = @blacks.select do |black|
+        black.position != piece.position
+      end
+    else
+      @whites = @whites.select do |white|
+        white.position != piece.position
+      end
+    end
     cell.content = colorize("  ", :no_color, cell.color)
   end
 
@@ -316,118 +328,85 @@ class Board
 
   end
 
-  def checkmate?(color)
-    #1. pos king white\black  -> index or [x, y]?
-    #king = nil
-    #(0..7).each do |row|
-      #(0..7).each do |col|
-        #content = @board(get_index([row, col]).content
-          #if content.is_a?(King) && content.color == color?
-            #pos_king = [row, col]
-          #end
-      #end
-    #end
-    #"checkmate"
-    # 
-    #2. if length path == 1 and there's path -> check?
-    #3 possible moves? valid_moves?
-  end
-  
   def multiply_pos(pos, num)
     return [pos[0] * num, pos[1] * num]
-  end
-
-  def king_in_check(player)
-    # player should track its king position?
-    # assume i know king's pos
-    king_white_pos = [7, 4]
-    king_black_pos = [0, 4]
-  
-    king_dirs = [[] ,[]]
-
-    check = false
-
-    num = 1
-    index = 0
-    until king_dirs.empty?
-      check_pos = king_white_pos + king_dirs[i]
-      """
-      if figure in check_pos has another color
-        delete direction? but knight?
-        OR check knights
-            check bishops
-            check rooks
-            check queen
-            check king
-            check pawns
-     """
-    end
-
   end
 
   def fill
     # pawns
     (0..7).each do |col|
       p_black = Pawn.new(:black, [1, col], self)
+      @blacks << p_black
       set_piece(p_black, [1, col])
     end
 
     (0..7).each do |col|
       p_white = Pawn.new(:no_color, [6, col], self)
+      @whites << p_white
       set_piece(p_white, [6, col])
     end
 
     # rook
     r1_black = Rook.new(:black, [0, 0], self)
     r2_black = Rook.new(:black, [0, 7], self)
+    @blacks.push(r1_black, r2_black)
     set_piece(r1_black, [0, 0])
     set_piece(r2_black, [0, 7])
 
     # knight
     k1_black = Knight.new(:black, [0, 1], self)
     k2_black = Knight.new(:black, [0, 6], self)
+    @blacks.push(k1_black, k2_black)
     set_piece(k1_black, [0, 1])
     set_piece(k2_black, [0, 6])
 
     # bishop
     b1_black = Bishop.new(:black, [0, 2], self)
     b2_black = Bishop.new(:black, [0, 5], self)
+    @blacks.push(b1_black, b2_black)
     set_piece(b1_black, [0, 2])
     set_piece(b2_black, [0, 5])
 
     # queen
     q_black = Queen.new(:black, [0, 3], self)
+    @blacks.push(q_black)
     set_piece(q_black, [0, 3])
 
     # king
     ki_black = King.new(:black, [0, 4], self)
+    @blacks.push(ki_black)
     set_piece(ki_black, [0, 4])
 
     # white
     # rook
     r1_white = Rook.new(:no_color, [7, 0], self)
     r2_white = Rook.new(:no_color, [7, 7], self)
+    @blacks.push(r1_white, r2_white)
     set_piece(r1_white, [7, 0])
     set_piece(r2_white, [7, 7])
 
     # knight
     k1_white = Knight.new(:no_color, [7, 1], self)
     k2_white = Knight.new(:no_color, [7, 6], self)
+    @blacks.push(k1_white, k2_white)
     set_piece(k1_white, [7, 1])
     set_piece(k2_white, [7, 6])
 
     # bishop
     b1_white = Bishop.new(:no_color, [7, 2], self)
     b2_white = Bishop.new(:no_color, [7, 5], self)
+    @blacks.push(b1_white, b2_white)
     set_piece(b1_white, [7, 2])
     set_piece(b2_white, [7, 5])
 
     # queen
     q_white = Queen.new(:no_color, [7, 3], self)
+    @blacks.push(q_white)
     set_piece(q_white, [7, 3])
 
     # king
     ki_white = King.new(:no_color, [7, 4], self)
+    @blacks.push(ki_white)
     set_piece(ki_white, [7, 4])
   end
 end

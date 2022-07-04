@@ -1,1 +1,1 @@
-Player = Struct.new(:color)
+Player = Struct.new(:color, :king)

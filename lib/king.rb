@@ -14,85 +14,148 @@ class King < Piece
     ]
   end
 
-  def in_check?
-    # check top
-    #return true if danger_line?(@position, [-1, 0], :non_diagonal)
-    start_pos = [@position[0] - 1, @position[1]]
+  def line_is_danger?(pos, add_vector)
+    # pawn check
+    pawn_pos1 = 0
+    pawn_pos2 = 0
 
-    while start_pos[0] >= 0
-      if @board.cell_is_empty?(start_pos)
-        start_pos = [start_pos[0] - 1, start_pos[1]]
-        next
-      else
-        piece = @board.get_piece(start_pos)
-
-        if piece.color == @color
-          break
-        elsif piece.is_a?(Rook) or piece.is_a?(Queen)
-          return true
-        end
-      end
-      start_pos = [start_pos[0] - 1, start_pos[1]]
+    if @color == :black
+      pawn_pos1 = [pos[0] + 1, pos[1] - 1]
+      pawn_pos2 = [pos[0] + 1, pos[1] + 1]
+    else
+      pawn_pos1 = [pos[0] - 1, pos[1] - 1]
+      pawn_pos2 = [pos[0] - 1, pos[1] + 1]
     end
 
-    # check bottom
-    start_pos = [@position[0] + 1, @position[1]]
+    possible_pawn1 = @board.get_piece(pawn_pos1)
+    possible_pawn2 = @board.get_piece(pawn_pos2)
 
-    while start_pos[0] < 8
-      if @board.cell_is_empty?(start_pos)
-        start_pos = [start_pos[0] + 1, start_pos[1]]
-        next
-      else
-        piece = @board.get_piece(start_pos)
-
-        if piece.color == @color
-          break
-        elsif piece.is_a?(Rook) or piece.is_a?(Queen)
-          return true
-        end
+    if possible_pawn1
+      if possible_pawn1.is_a?(Pawn) and possible_pawn1.color != @color
+        return true
       end
-      start_pos = [start_pos[0] + 1, start_pos[1]]
     end
 
-    #check right
-    start_pos = [@position[0], @position[1] + 1]
-
-    while start_pos[1] < 8
-      if @board.cell_is_empty?(start_pos)
-        start_pos = [start_pos[0], start_pos[1] + 1]
-        next
-      else
-        piece = @board.get_piece(start_pos)
-
-        if piece.color == @color
-          break
-        elsif piece.is_a?(Rook) or piece.is_a?(Queen)
-          return true
-        end
+    if possible_pawn2
+      if possible_pawn2.is_a?(Pawn) and possible_pawn2.color != @color
+        return true
       end
-      start_pos = [start_pos[0], start_pos[1] + 1]
     end
 
-    #check left
-    start_pos = [@position[0], @position[1] - 1]
+    line_type = (add_vector[0].abs == 1 and
+      add_vector[1].abs == 1) ? :diagonal : :non_diagonal
 
-    while start_pos[1] >= 0
-      if @board.cell_is_empty?(start_pos)
-        start_pos = [start_pos[0], start_pos[1] - 1]
-        next
-      else
-        piece = @board.get_piece(start_pos)
+    if line_type == :non_diagonal
+      start_pos = sum_vec(pos, add_vector)
 
-        if piece.color == @color
-          break
-        elsif piece.is_a?(Rook) or piece.is_a?(Queen)
-          return true
+      while (start_pos[0] >= 0 and start_pos[0] < 8 and
+          start_pos[1] >= 0 and start_pos[1] < 8)
+        
+        if @board.cell_is_empty?(start_pos)
+          start_pos = sum_vec(start_pos, add_vector)
+          next
+        else
+          piece = @board.get_piece(start_pos)
+
+          if piece.color == @color
+            break
+          elsif piece.is_a?(Rook) or piece.is_a?(Queen)
+            return true
+          end
         end
+        start_pos = sum_vec(start_pos, add_vector)
       end
-      start_pos = [start_pos[0], start_pos[1] - 1]
-    end
+    else
+      #diagonal
+      start_pos = sum_vec(pos, add_vector)
+      while (start_pos[0] >= 0 and start_pos[0] < 8 and
+          start_pos[1] >= 0 and start_pos[1] < 8)
+        
+        if @board.cell_is_empty?(start_pos)
+          start_pos = sum_vec(start_pos, add_vector)
+          next
+        else
+          piece = @board.get_piece(start_pos)
 
+          if piece.color == @color
+            break
+          elsif piece.is_a?(Bishop) or piece.is_a?(Queen)
+            return true
+          end
+        end
+        start_pos = sum_vec(start_pos, add_vector)
+      end
+    end
     return false
+  end
+
+  def checkmate?
+    danger_dirs = []
+    @directions.each do |dir|
+      danger_dirs.push << dir if line_is_danger?(@position, dir)
+    end
+
+    # if king is under attack
+    if danger_dirs.length > 0
+      # find any safe cells
+      possible_free_dirs = (Set.new(danger_dirs) ^ Set.new(@directions)).to_a
+      possible_free_dirs = possible_free_dirs.select do |dir|
+        @board.cell_is_empty?(sum_vec(@position, dir))
+      end
+
+      safe_cells = []
+      possible_free_dirs.each do |possible_dir|
+        pos = sum_vec(@position, possible_dir)
+        count_dangers = 0
+        @directions.each do |add_vec|
+          if line_is_danger?(pos, add_vec)
+            count_dangers += 1
+          end
+        end
+        if count_dangers == 0
+          safe_cells << pos
+        end
+      end
+
+      if safe_cells.length > 0
+        return :check
+      else
+        # find friends figure for protect their king
+        pos_danger = 0
+        possible_def = 0
+        if @color == :black
+          danger_dirs.each do |dir|
+            pos_danger = sum_vec(@position, dir)
+            @board.blacks.each do |bl|
+              if @board.cell_is_empty?(pos_danger)
+                if bl.can_move?(pos_danger)
+                  possible_def += 1
+                end
+              end
+            end
+          end
+        else
+          danger_dirs.each do |dir|
+            pos_danger = add_vector(@position, dir)
+            @board.whites.each do |white|
+              if @board.cell_is_empty?(pos_danger)
+                if white.can_move?(pos_danger)
+                  possible_def += 1
+                end
+              end
+            end
+          end
+        end
+        if possible_def == 0
+          return :checkmate
+        else
+          return :check
+        end
+      end
+    else
+      return false
+    end
+
   end
 
   def can_move?(destination)
@@ -130,158 +193,32 @@ class King < Piece
     # right and left direction
     when [0, 1], [0, -1]
 
-      start_row = to[0] + 1
-      start_col = to[1]
+      return true if line_is_danger?(to, [1, 0])
 
-      (start_row..7).each do |row|
-        if @board.cell_is_empty?([row, start_col])
-          next
-        else
-          piece = @board.get_piece([row, start_col])
-
-          if piece.color == @color
-            break
-          elsif piece.is_a?(Rook) or piece.is_a?(Queen)
-            return true
-          end
-        end
-      end
-
-      start_row = to[0] - 1
-      start_col = to[1]
-      while start_row >= 0
-        if @board.cell_is_empty?([start_row, start_col])
-          start_row -= 1
-          next
-        else
-          piece = @board.get_piece([start_row, start_col])
-
-          if piece.color == @color
-            break
-          elsif piece.is_a?(Rook) or piece.is_a?(Queen)
-            return true
-          end
-        end
-        start_row -= 1
-      end
+      return true if line_is_danger(to, [-1, 0])
 
     # top and bot
     when [1, 0], [-1, 0]
 
-      start_pos = [to[0], to[1] + 1]
-      while start_pos[1] < 8
-        if @board.cell_is_empty?(start_pos)
-          start_pos = [start_pos[0], start_pos[1] + 1]
-          next
-        else
-          piece = @board.get_piece(start_pos)
+      return true if line_is_danger?(to, [0, 1])
 
-          if piece.color == @color
-            break
-          elsif piece.is_a?(Rook) or piece.is_a?(Queen)
-            return true
-          end
-        end
-        start_pos = [start_pos[0], start_pos[1] + 1]
-      end
-
-      start_pos = [to[0], to[1] - 1]
-      while start_pos[1] >= 0
-        if @board.cell_is_empty?(start_pos)
-          start_pos = [start_pos[0], start_pos[1] - 1]
-          next
-        else
-          piece = @board.get_piece(start_pos)
-
-          if piece.color == @color
-            break;
-          elsif piece.is_a?(Rook) or piece.is_a?(Queen)
-            return true
-          end
-        end
-        start_pos [start_pos[0], start_pos[1] - 1]
-      end
+      return true if line_is_danger?(to, [0, -1])
 
     # top-right and bottom-left
     when [-1, 1], [1, -1]
       # check top-left part of diagonal
-      start_p = [to[0] - 1, to[1] - 1]
-
-      while start_p[0] >= 0 and start_p[1] >= 0
-        if @board.cell_is_empty?(start_p)
-          start_p = [start_p[0] - 1, start_p[1] - 1]
-          next
-        else
-          piece = @board.get_piece(start_p)
-
-          if piece.color == @color
-            break;
-          elsif piece.is_a?(Bishop) or piece.is_a?(Queen)
-            return true
-          end
-        end
-        start_p = [start_p[0] - 1, start_p[1] - 1]
-      end
+      return true if line_is_danger?(to, [-1, -1])
 
       # check bottom-right part of diagonal
-      start_p = [to[0] + 1, to[1] + 1]
-
-      while start_p[0] < 8 and start_p[1] < 8
-        if @board.cell_is_empty?(start_p)
-          start_p = [start_p[0] + 1, start_p[1] + 1]
-          next
-        else
-          piece = @board.get_piece(start_p)
-
-          if piece.color == @color
-            break;
-          elsif piece.is_a?(Bishop) or piece.is_a?(Queen)
-            return true
-          end
-        end
-        start_p = [start_p[0] + 1, start_p[1] + 1]
-      end
+      return true if line_is_danger?(to, [1, 1])
 
     # bottom-right and top-left
     when [1, 1], [-1, -1]
       # check top-right part of diagonal
-      start_p = [to[0] - 1, to[1] + 1]
-
-      while (start_p[0] >= 0 and start_p[1] < 8)
-        if @board.cell_is_empty?(start_p)
-          start_p = [start_p[0] - 1, start_p[1] + 1]
-          next
-        else
-          piece = @board.get_piece(start_p)
-
-          if piece.color == @color
-            break
-
-          elsif piece.is_a?(Bishop) or piece.is_a?(Queen)
-            return true
-          end
-        end
-        start_p = [start_p[0] - 1, start_p[1] + 1]
-      end
+      return true if line_is_danger?(to, [-1, 1])
 
       # check bottom-left part of diagonal
-      start_p = [to[0] + 1, to[1] - 1]
-
-      while (start_p[0] < 8 and start_p[1] >= 0)
-        if @board.cell_is_empty?(start_p)
-          start_p = [start_p[0] + 1, start_p[1] - 1]
-          next
-        else
-          piece = @board.get_piece(start_p)
-
-          if piece.color == @color
-            break
-          elsif piece.is_a?(Bishop) or piece.is_a?(Queen)
-            return true
-          end
-        end
-        start_p = [start_p[0] + 1, start_p[1] - 1]
-      end
+      return true if line_is_danger?(to, [1, -1])
     end
 
     return false

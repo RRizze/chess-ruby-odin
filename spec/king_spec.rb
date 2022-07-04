@@ -5,53 +5,77 @@ require "./lib/rook.rb"
 
 describe King do
 
-  describe "#in_check?" do
-    it "returns true if king in check - top" do
+  describe "#checkmate?" do
+    it "returns false if no checkmate or check" do
       board = Board.new
       king = King.new(:black, [3, 3], board)
       board.set_piece(king, [3, 3])
 
-      rook = Rook.new(:no_color, [1, 3], board)
-      board.set_piece(rook, [1, 3])
+      bishop = Bishop.new(:no_color, [6, 1], board)
+      board.set_piece(bishop, [6, 1])
 
-      res = king.in_check?
-      expect(res).to be true
+      queen = Queen.new(:no_color, [2, 7], board)
+      board.set_piece(queen, [2, 7])
+
+      rook = Rook.new(:no_color, [4, 0], board)
+      board.set_piece(rook, [4, 0])
+
+      pawn1 = Pawn.new(:black, [3, 2], board)
+      board.set_piece(pawn1, [3, 2])
+
+      pawn2 = Pawn.new(:black, [3, 4], board)
+      board.set_piece(pawn2, [3, 4])
+
+      res = king.checkmate?
+      expect(res).to be false
     end
 
-    it "returns true if king in check - bottom" do
+    it "returns :check if check" do
       board = Board.new
       king = King.new(:black, [3, 3], board)
       board.set_piece(king, [3, 3])
 
-      rook = Rook.new(:no_color, [6, 3], board)
-      board.set_piece(rook, [6, 3])
+      bishop = Bishop.new(:no_color, [6, 1], board)
+      board.set_piece(bishop, [6, 1])
 
-      res = king.in_check?
-      expect(res).to be true
+      queen = Queen.new(:no_color, [2, 7], board)
+      board.set_piece(queen, [2, 7])
+
+      rook1 = Rook.new(:no_color, [0, 3], board)
+      board.set_piece(rook1, [0, 3])
+
+      rook2 = Rook.new(:no_color, [4, 0], board)
+      board.set_piece(rook2, [4, 0])
+
+      res = king.checkmate?
+      expect(res).to eq(:check)
     end
 
-    it "returns true if king in check - right" do
+    it "returns :checkmate if checkmate" do
       board = Board.new
       king = King.new(:black, [3, 3], board)
       board.set_piece(king, [3, 3])
 
-      rook = Rook.new(:no_color, [3, 5], board)
-      board.set_piece(rook, [3, 5])
+      bishop = Bishop.new(:no_color, [6, 1], board)
+      board.set_piece(bishop, [6, 1])
 
-      res = king.in_check?
-      expect(res).to be true
-    end
+      queen = Queen.new(:no_color, [2, 7], board)
+      board.set_piece(queen, [2, 7])
 
-    it "returns true if king in check - left" do
-      board = Board.new
-      king = King.new(:black, [3, 3], board)
-      board.set_piece(king, [3, 3])
+      rook = Rook.new(:no_color, [0, 3], board)
+      board.set_piece(rook, [0, 3])
 
-      rook = Rook.new(:no_color, [3, 1], board)
-      board.set_piece(rook, [3, 1])
+      rook2 = Rook.new(:no_color, [4, 0], board)
+      board.set_piece(rook2, [4, 0])
 
-      res = king.in_check?
-      expect(res).to be true
+      pawn1 = Pawn.new(:black, [3, 2], board)
+      board.set_piece(pawn1, [3, 2])
+
+      pawn2 = Pawn.new(:black, [3, 4], board)
+      board.set_piece(pawn2, [3, 4])
+
+      res = king.checkmate?
+      expect(res).to eq(:checkmate)
     end
   end
 
@@ -83,6 +107,80 @@ describe King do
       expect(res).to be true
     end
 
+  end
+  describe "#line_is_danger?" do
+
+    it "#return true if line is under attack - Rook" do
+      board = Board.new
+      king = King.new(:black, [3, 3], board)
+      board.set_piece(king, [3, 3])
+
+      rook = Rook.new(:no_color, [4, 0], board)
+      board.set_piece(rook, [4, 0])
+      # we move from top to bottom and check left and right sides
+      add_vector = [0, -1] # check LEFT side OF target point
+      target = [4, 3]
+      res = king.line_is_danger?(target, add_vector)
+      expect(res).to be true
+    end
+
+    it "#return true if line is under attack - Queen" do
+      board = Board.new
+      king = King.new(:black, [3, 3], board)
+      board.set_piece(king, [3, 3])
+
+      queen = Queen.new(:no_color, [4, 0], board)
+      board.set_piece(queen, [4, 0])
+      # we move from top to bottom and check left and right sides
+      add_vector = [0, -1] # check LEFT side OF target point
+      target = [4, 3]
+      res = king.line_is_danger?(target, add_vector)
+      expect(res).to be true
+    end
+
+    it "#return true if line is under attack - Bishop" do
+      board = Board.new
+      king = King.new(:black, [3, 3], board)
+      board.set_piece(king, [3, 3])
+
+      bishop = Bishop.new(:no_color, [5, 3], board)
+      board.set_piece(bishop, [5, 3])
+      # we move to bot-right [1, 1] and check left and right parts of diagonal
+      add_vector = [1, -1] # check BOTTOM-LEFT side OF target point
+      target = [4, 4]
+      res = king.line_is_danger?(target, add_vector)
+      expect(res).to be true
+    end
+
+    it "#return true if line is under attack - Pawn" do
+      board = Board.new
+      king = King.new(:black, [3, 3], board)
+      board.set_piece(king, [3, 3])
+
+      pawn = Pawn.new(:no_color, [5, 3], board)
+      board.set_piece(pawn, [5, 3])
+      # we move to bot-right [1, 1] and check left and right cells
+      # as neighbors in diagonal
+      add_vector = [1, -1] # check BOTTOM-LEFT cell
+      target = [4, 4]
+      res = king.line_is_danger?(target, add_vector)
+      expect(res).to be true
+    end
+
+    it "#return true if line is under attack - Pawn" do
+      board = Board.new
+      king = King.new(:black, [3, 3], board)
+      board.set_piece(king, [3, 3])
+
+      pawn = Pawn.new(:no_color, [5, 5], board)
+      board.set_piece(pawn, [5, 5])
+      # we move to bot-right [1, 1] and check left and right cells
+      # as neighbors in diagonal
+      add_vector = [1, 1] # check BOTTOM-RIGHT cell
+      target = [4, 4]
+      res = king.line_is_danger?(target, add_vector)
+      expect(res).to be true
+    end
   end
 
   describe "#is_danger?" do
