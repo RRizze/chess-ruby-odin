@@ -12,10 +12,6 @@ class Pawn < Piece
     @jump = false
   end
 
-  def jumped?
-    @jump
-  end
-
   def can_move?(destination)
     # false if piece at the destination has same color
     possible_piece = @board.get_piece(destination)
@@ -28,7 +24,6 @@ class Pawn < Piece
 
     # find direction to move
     direction = get_direction(@position, destination)
-    p "#{direction}, #{destination}"
 
     if direction.length == 0
       return false
@@ -48,7 +43,7 @@ class Pawn < Piece
     if @board.cell_is_empty?(destination) and direction[1] != 0
       pawn_pos = [@position[0], @position[1] + (destination[1] - @position[1])]
       possible_pawn = @board.get_piece(pawn_pos)
-      if possible_pawn and !possible_pawn.jumped? and !(possible_pawn.moves == 1)
+      if possible_pawn and !possible_pawn.jump and !(possible_pawn.moves == 1)
         return false
       end
     end

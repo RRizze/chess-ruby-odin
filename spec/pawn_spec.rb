@@ -7,7 +7,7 @@ describe Pawn do
 
   describe "#can_move?" do
 
-    xit "returns false if dest piece has same color" do
+    it "returns false if dest piece has same color" do
       board = Board.new
       board.fill()
       piece = board.get_piece([1, 1])
@@ -18,7 +18,7 @@ describe Pawn do
       expect(res).to be false
     end
 
-    xit "returns false if piece cant moves for incorrect direction" do
+    it "returns false if piece cant moves for incorrect direction" do
       board = Board.new
       board.fill()
       piece = board.get_piece([1, 1])
@@ -27,7 +27,7 @@ describe Pawn do
       expect(res).to be false
     end
 
-    xit "returns true if piece moves two cells in the first move" do
+    it "returns true if piece moves two cells in the first move" do
       board = Board.new
       board.fill()
       piece = board.get_piece([1, 0])
@@ -36,7 +36,7 @@ describe Pawn do
       expect(res).to be true
     end
 
-    xit "returns false if piece can't moves two cells in the second move" do
+    it "returns false if piece can't moves two cells in the second move" do
       board = Board.new
       board.fill()
       piece = board.get_piece([1, 0])
@@ -57,7 +57,7 @@ describe Pawn do
       expect(res).to be true
     end
 
-    xit "returns false if piece can't moves to diagonal if there's no pieces" do
+    it "returns false if piece can't moves to diagonal if there's no pieces" do
       board = Board.new
       board.fill()
       piece = board.get_piece([1, 0])
@@ -66,7 +66,7 @@ describe Pawn do
       expect(res).to be false
     end
 
-    xit "returns true if piece can eats another one to diagonally - en passant" do
+    it "returns true if piece can eats another one to diagonally - en passant" do
       board = Board.new
       board.fill()
 
@@ -84,7 +84,7 @@ describe Pawn do
       expect(res).to be true
     end
 
-    xit "returns false if piece cant jumps over another figure" do
+    it "returns false if piece cant jumps over another figure" do
       board = Board.new
       board.fill()
       piece = board.get_piece([1, 0])
