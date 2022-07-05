@@ -6,7 +6,6 @@ class Pawn < Piece
 
   def initialize(color, position, board)
     super(color, position, board)
-    @moves = 0
     @token = "♟ "
     @directions_black = [[1, 0], [2, 0], [1, -1], [1, 1]]
     @directions_white = [[-1, 0], [-2, 0], [-1, 1], [-1, -1]]
@@ -29,6 +28,7 @@ class Pawn < Piece
 
     # find direction to move
     direction = get_direction(@position, destination)
+    p "#{direction}, #{destination}"
 
     if direction.length == 0
       return false
@@ -36,6 +36,7 @@ class Pawn < Piece
 
     # can't jump over pieces
     if direction[0].abs == 2
+      #from 5 to 3 -> middle is 4
       middle_x = direction[0] > 0 ? 1 : -1
 
       if !@board.cell_is_empty?([position[0] + middle_x, position[1]])
@@ -43,47 +44,35 @@ class Pawn < Piece
       end
     end
 
-    # can't moves diagonal to empty cells 
+    # can't moves diagonally to empty cells  except en passant
     if @board.cell_is_empty?(destination) and direction[1] != 0
-      return false
+      pawn_pos = [@position[0], @position[1] + (destination[1] - @position[1])]
+      possible_pawn = @board.get_piece(pawn_pos)
+      if possible_pawn and !possible_pawn.jumped? and !(possible_pawn.moves == 1)
+        return false
+      end
     end
 
-
     return true
-
   end
 
   def get_direction(from, to)
-    #first move
-    if @moves == 0
-      if ((to[0] - from[0]).abs == 2) and (to[1] == from[1])
-        case @color
-        when :no_color
-          return [-2, 0]
-        when :black
-          return [2, 0]
-        end
+    row = to[0] - from[0]
+    col = to[1] - from[1]
 
-      elsif (to[0] - from[0]).abs == 1 and (to[1] - from[1]).abs == 1
-        return [ to[0] - from[0], to[1] - from[1] ]
-      else
-        return []
-      end
-    else
-      if ((to[0] - from[0]).abs == 1) and (to[1] == from[1])
-        case @color
-        when :no_color
-          return [-1, 0]
-        when :black
-          return [1, 0]
-        end
-      elsif (to[0] - from[0]).abs == 1 and (to[1] == from[1]).abs == 1
-        return [ to[0] - from[0], to[1] - from[1] ]
-      else
-        return []
-      end
+    if row.abs > 2 or col.abs >= 2
+      return []
     end
-    return []
+
+    if @moves == 0 and row.abs == 2 and col == 0
+      return [row, col]
+    end
+
+    if @moves != 0 and row.abs == 2 and col == 0
+      return []
+    end
+
+    return [row, col]
   end
 
 end

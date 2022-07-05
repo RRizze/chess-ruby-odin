@@ -69,6 +69,7 @@ class Game
       res = current_player[:king].checkmate?()
 
       if res == :check
+        puts "Check. Protect your king!"
       elsif res == :checkmate
         print "#{current_player[:color].to_s.capitalize} is lost. Game over."
         break
@@ -77,7 +78,7 @@ class Game
       txt_move(current_player, true)
       move = gets.chomp
 
-      #success = false
+      success = false
 
       # TODO change success logic
       until success = board.move(move, current_player) do

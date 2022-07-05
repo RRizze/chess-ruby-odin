@@ -56,14 +56,21 @@ class Board
   def remove_piece(pos)
     cell = @board[get_index(pos)]
     piece = get_piece(pos)
-    if piece.color == :black
-      @blacks = @blacks.select do |black|
-        black.position != piece.position
+    if piece
+      if piece.color == :black
+        new_blacks = @blacks.select do |black|
+          black.position != piece.position
+        end
+        @blacks = new_blacks
+        cell.content = colorize("  ", :no_color, cell.color)
+      else
+        new_whites = @whites.select do |white|
+          white.position != piece.position
+        end
+        @whites = new_whites
+        cell.content = colorize("  ", :no_color, cell.color)
       end
-    else
-      @whites = @whites.select do |white|
-        white.position != piece.position
-      end
+      cell.content = colorize("  ", :no_color, cell.color)
     end
     cell.content = colorize("  ", :no_color, cell.color)
   end
@@ -115,107 +122,6 @@ class Board
     pos
   end
 
-  def valid_moves(move)
-    from = move[0]
-    to = move[1]
-    cell_from = @board[get_index(from)]
-    cell_to = @board[get_index(to)]
-
-    frontier = []
-    frontier.push(from)
-    visited = Set.new()
-    came_from = {} # a->b came_from[b] = a
-    # if I will need path
-    came_from[from] = nil
-
-    piece = cell_from.content
-    direction = get_direction(from, to)
-
-    if same_colors?(from, to)
-      return []
-    end
-
-    until frontier.empty?
-      current = frontier.shift
-
-      if current == to
-        break;
-      end
-
-      if !visited.include?(current)
-        visited.add(current)
-        # process with current
-      end
-
-      neighbors = neighbors(current, to, piece, direction)
-
-      if neighbors.include?(to)
-        for next_pos in neighbors
-          came_from[next_pos] = current
-        end
-        break
-      end
-
-      for next_pos in neighbors
-        if !visited.include?(next_pos)
-          frontier.push(next_pos)
-          came_from[next_pos] = current
-        end
-      end
-    end
-
-    res = []
-    for to, from in came_from
-      if !to.nil? && !from.nil?
-        res.push([from, to])
-      end
-    end
-
-    return res
-  end
-
-  def neighbors(from, to, piece, direction)
-    result = []
-    dirs = nil
-
-    if piece.is_a?(Pawn)
-      if !cell_is_empty?(to) or passant_capture?(from, to)
-        dirs = piece.get_directions(true)
-      else
-        dirs = piece.get_directions(false)
-      end
-    else
-      dirs = piece.get_directions
-    end
-
-    dirs = dirs.select { |dir| get_unit_vector(dir) == direction }
-
-    for dir in dirs
-      new_pos = [
-        from[0] + dir[0],
-        from[1] + dir[1]
-      ]
-
-      if new_pos == to
-        result.push(new_pos)
-        return result
-      end
-
-      # omfg
-      if in_bounds?(new_pos)
-        if cell_is_empty?(new_pos)
-          result.push(new_pos)
-        else
-          if !same_color?(piece, @board[get_index(new_pos)].content)
-            result.push(new_pos)
-          end
-        end
-      end
-    end
-
-    return result
-  end
-
   def in_bounds?(pos)
     if (pos[0] >= 0 and pos[0] < @rows and
         pos[1] >= 0 and pos[1] < @columns)
@@ -239,30 +145,6 @@ class Board
       else
         return false
       end
-    end
-  end
-
-  def passant_capture?(from, to)
-    # color doesn't matter
-
-    from_idx = get_index(from)
-    to_idx = get_index(to)
-    piece_from = @board[from_idx].content
-
-    pos_left = [from[0],  (from[1] - 1)]
-    pos_right = [from[0], (from[1] + 1)]
-    cell_left = @board[get_index(pos_left)]
-    cell_right = @board[get_index(pos_right)]
-    #p "pawn is jumped? #{cell_left.content.jumped?}"
-
-    if cell_left.content.is_a?(Pawn) and cell_left.content.jumped?
-      cell_left.content = colorize("  ", :no_color, cell_left.color)
-      return true
-    elsif cell_right.content.is_a?(Pawn) and cell_right.content.jumped?
-      cell_right.content = colorize("  ", :no_color, cell_right.color)
-      return true
-    else
-      return false
     end
   end
 
@@ -294,42 +176,27 @@ class Board
       return false
     end
 
-    if piece.can_move(to)
+    if piece.can_move?(to)
       # do logic
-    end
+      if piece.is_a?(Pawn) and cell_is_empty?(to)
+        if piece.color == :black
+          remove_piece([to[0] - 1, to[1]])
+        else
+          remove_piece([to[0] + 1, to[1]])
+        end
+      end
+      set_piece(piece, to)
+      piece.position = to
+      piece.moves += 1
+      remove_piece(from)
 
-    # check valid moves for piece
-    valid_moves = valid_moves(move_arr)
-    #p "valid_moves for #{from}, to: #{to}", valid_moves
-
-    if valid_moves.length == 0
+      return true
+    else
       return false
     end
 
-    cell_from = @board[get_index(from)]
-    piece = cell_from.content
-
-    if piece.is_a?(Pawn) and (to[0] - from[0]).abs == 2 and piece.moves == 0
-      piece.jump = true
-      piece.moves += 1
-    end
-
-    # clear cell
-    #if passant_capture?(from, to)
-
-    remove_piece(from)
-    #cell_from.content = colorize("  ", :no_color, cell_from.color)
-    set_piece(piece, to)
-    if piece.is_a?(Pawn)
-      piece.moves += 1
-      return true
-    end
     return true
 
-  end
-
-  def multiply_pos(pos, num)
-    return [pos[0] * num, pos[1] * num]
   end
 
   def fill
