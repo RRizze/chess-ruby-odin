@@ -38,11 +38,10 @@ describe Pawn do
 
     it "returns false if piece can't moves two cells in the second move" do
       board = Board.new
-      board.fill()
-      piece = board.get_piece([1, 0])
-      piece.moves += 1
-      destination = [3, 0]
-      res = piece.can_move?(destination)
+      #board.fill()
+      pawn = Pawn.new(:black, [2, 0], board)
+      destination = [4, 0]
+      res = pawn.can_move?(destination)
       expect(res).to be false
     end
 
@@ -71,13 +70,10 @@ describe Pawn do
       board.fill()
 
       piece = Pawn.new(:black, [3, 0], board)
-      piece.moves += 1
-      piece.jump = true
       board.set_piece(piece, [3, 0])
+      board.en_passant_pos = [3, 0]
 
       piece_attacker = Pawn.new(:no_color, [3, 1], board)
-      piece_attacker.moves += 3
-      piece_attacker.jump = true
       board.set_piece(piece_attacker, [3, 1])
 
       res = piece_attacker.can_move?([2, 0])

@@ -2,7 +2,6 @@ require_relative "piece"
 
 class Pawn < Piece
   attr_accessor :jump
-  attr_accessor :moves
 
   def initialize(color, position, board)
     super(color, position, board)
@@ -10,6 +9,10 @@ class Pawn < Piece
     @directions_black = [[1, 0], [2, 0], [1, -1], [1, 1]]
     @directions_white = [[-1, 0], [-2, 0], [-1, 1], [-1, -1]]
     @jump = false
+  end
+
+  def get_fen
+    (@color == :black) ? "p" : "P"
   end
 
   def can_move?(destination)
@@ -42,8 +45,7 @@ class Pawn < Piece
     # can't moves diagonally to empty cells  except en passant
     if @board.cell_is_empty?(destination) and direction[1] != 0
       pawn_pos = [@position[0], @position[1] + (destination[1] - @position[1])]
-      possible_pawn = @board.get_piece(pawn_pos)
-      if possible_pawn and !possible_pawn.jump and !(possible_pawn.moves == 1)
+      if pawn_pos != @board.en_passant_pos
         return false
       end
     end
@@ -59,11 +61,12 @@ class Pawn < Piece
       return []
     end
 
-    if @moves == 0 and row.abs == 2 and col == 0
+    if (row.abs == 2 and col == 0 and from[0] == 1 and @color == :black) or
+        (row.abs == 2 and col == 0 and from[0] == 6 and @color == :no_color)
+      @board.en_passant_pos = to
       return [row, col]
-    end
-
-    if @moves != 0 and row.abs == 2 and col == 0
+    elsif (row.abs == 2 and col == 0 and from[0] != 1 and @color == :black) or
+      (row.abs == 2 and col == 0 and from[0] != 6 and @color == :no_color)
       return []
     end
 

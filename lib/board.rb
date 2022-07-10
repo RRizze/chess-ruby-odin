@@ -11,6 +11,7 @@ require_relative "color"
 class Board
   include Color
   attr_accessor :board, :whites, :blacks
+  attr_accessor :en_passant_pos, :castling
 
   LABELS = {
     letters: ["a", "b", "c", "d", "e", "f", "g", "h"],
@@ -23,6 +24,10 @@ class Board
     @board = create_board(@rows, @columns)
     @whites = []
     @blacks = []
+    @en_passant_pos = "-"
+    @castling = "KQkq"
+    @halfmove = 0
+    @fullmove = 1
   end
 
   def create_board(w, h)
@@ -178,24 +183,23 @@ class Board
 
     if piece.can_move?(to)
       # do logic
-      if piece.is_a?(Pawn) and cell_is_empty?(to)
+      if piece.is_a?(Pawn) and cell_is_empty?(to) and @en_passant_pos != "-"
+        @en_passant_pos = "-"
         if piece.color == :black
           remove_piece([to[0] - 1, to[1]])
         else
           remove_piece([to[0] + 1, to[1]])
         end
       end
+
       set_piece(piece, to)
       piece.position = to
-      piece.moves += 1
       remove_piece(from)
 
       return true
     else
       return false
     end
-
-    return true
 
   end
 

@@ -1,9 +1,9 @@
 require_relative "board"
 require_relative "player"
+require "json"
 
 class Game
-
-  @@mods = ["pvp", "ai"]
+  @@mods = ["pvp", "ai", "load"]
   @@ESC = {
     clr_screen: "\e[H\e[2J",
     clr: "\e[0J",
@@ -26,6 +26,7 @@ class Game
   def choose_mode
     mode_txt = <<~HEREDOC
       Choose your mode:
+        'load' - Load the last game
         'pvp' - Human vs Human
         'ai' - Human vs Computer
 
@@ -35,7 +36,7 @@ class Game
 
   def txt_move(player, success)
     move_txt = <<~HEREDOC
-      Your moves should be like: 'e3-e4'
+      Type move like 'e2-e3' or type 'save' to save the game
 
     HEREDOC
 
@@ -51,14 +52,70 @@ class Game
     end
   end
 
-  def pvp_start
-    board = Board.new
-    board.fill()
+  def save_game(game_state)
+    state = generate_fen(game_state)
 
-    king_w = board.get_piece([0, 4])
-    king_b = board.get_piece([7, 4])
+    json_data = JSON.generate(state)
+    File.open("save_game.json", "w") do |file|
+      file.write(json_data)
+    end
+  end
 
-    players = [Player.new(:white, king_w), Player.new(:black, king_b)]
+  def generate_fen(game_state)
+    res = ""
+    empty_count = 0
+    delimetr = "\\"
+    game_state[:board].each_with_index do |cell, index|
+      if (index + 1) % 8 == 0 and index != board.length - 1
+        res += delimetr
+        empty_count = 0
+      else
+        if cell.content.is_a?(String)
+          empty_count += 1
+        else
+          res += empty_count.to_s
+          res += cell.content.get_fen
+        end
+      end
+    end
+    res += " "
+    res += game_state[:future_move]
+    res += " "
+    res += game_state[:castling]
+    res += " "
+    res += game_state[:en_passant_pos]
+    res += " "
+    res += game_state[:halfmove] || "0"
+    res += " "
+    res += game_state[:fullmove]
+  end
+
+  def load_last_game
+    filename = "save_game.json"
+    if File.exists?(filename)
+      file = File.read(filename, encoding: "utf-8")
+      game_state = JSON.parse(file)
+      return game_state
+    else
+      return false
+    end
+  end
+
+  def pvp_start(game_state)
+    board = nil
+    players = nil
+    king_w = nil
+    king_b = nil
+    if game_state
+      board = game_state["board"]
+      players = game_state["players"]
+    else
+      board = Board.new
+      board.fill()
+      king_w = board.get_piece([0, 4])
+      king_b = board.get_piece([7, 4])
+      players = [Player.new(:white, king_w), Player.new(:black, king_b)]
+    end
 
     current_player = players[0]
 
@@ -77,6 +134,20 @@ class Game
 
       txt_move(current_player, true)
       move = gets.chomp
+
+      if move == "save"
+        player_color = current_player.color == :black ? :white : :black
+        new_game_state = {
+          future_move: player_color,
+          castling: board.castling,
+          en_passant_pos: board.en_passant_pos,
+          halfmove: "0",
+          fullmove: "1",
+          board: board
+        }
+        save_game(new_game_state)
+        break
+      end
 
       success = false
 
@@ -102,16 +173,25 @@ class Game
     mode = gets.chomp
     until @@mods.include?(mode)
       clear_lines(2)
-      puts "Wrong mode. Chose 'pvp' or 'ai'"
+      puts "Wrong mode. Chose 'pvp', 'load' or 'ai'"
       mode = gets.chomp
     end
 
-    if mode == "pvp"
+    case mode
+    when "pvp"
       clear_screen
-      pvp_start
-    else
+      pvp_start(false)
+    when "ai"
       clear_screen
       ai_start
+    when "load"
+      clear_screen
+      game_state = load_last_game
+      if game_state
+        pvp_start(game_state)
+      else
+        pvp_start(false)
+      end
     end
 
   end

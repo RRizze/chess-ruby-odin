@@ -14,6 +14,10 @@ class King < Piece
     ]
   end
 
+  def get_fen
+    (@color == :black) ? "k" : "K"
+  end
+
   def line_is_danger?(pos, add_vector)
     # pawn check
     pawn_pos1 = 0
@@ -168,17 +172,76 @@ class King < Piece
       end
     end
 
-    # false if length of move is more than 1
-    if (@position[0] - destination[0]).abs != 1 or (@position[1] - destination[1]).abs != 1
+    direction = get_direction(@position, destination)
+
+    # false if length of move is more than 1 along Rows
+    if (destination[0] - @position[0]).abs > 1
       return false
     end
 
-    direction = get_direction(@position, destination)
-
     # false if dir is incorrect
-    # get_direction always return unit vector, so is this condition redundant?
     if !@directions.include?(direction)
       return false
+    end
+
+    diff_cols = destination[1] - @position[1]
+
+    if direction == [0, -1] and (diff_cols).abs == 2
+      if @color == :black and !@board.castling.include?("q")
+        return false
+      end
+
+      if @color == :no_color and !@board.castling.include?("Q")
+        return false
+      end
+
+      empty_p1_pos = [@position[0], @position[1] - 1]
+      empty_p2_pos = [@position[0], @position[1] - 2]
+      empty_p3_pos = [@position[0], @position[1] - 3]
+
+      possible_p1 = @board.cell_is_empty?(empty_p1_pos)
+      possible_p2 = @board.cell_is_empty?(empty_p2_pos)
+      possible_p3 = @board.cell_is_empty?(empty_p3_pos)
+
+      rook_pos = (@color == :black) ? [0, 0] : [7, 0]
+      possible_rook = @board.get_piece(rook_pos)
+
+      if !possible_rook
+        return false
+      end
+
+      if !possible_p1 or !possible_p2 or !possible_p3 or
+          @did_move or possible_rook.did_move
+        return false
+      end
+
+    # short castling
+    elsif direction == [0, 1] and (diff_cols).abs == 2
+      if @color == :black and !@board.castling.include?("k")
+        return false
+      end
+
+      if @color == :no_color and !@board.castling.include?("K")
+        return false
+      end
+
+      empty_p1_pos = [@position[0], @position[1] - 1]
+      empty_p2_pos = [@position[0], @position[1] - 2]
+
+      possible_p1 = @board.cell_is_empty?(empty_p1_pos)
+      possible_p2 = @board.cell_is_empty?(empty_p2_pos)
+
+      rook_pos = @color == :black ? [0, 7] : [7, 7]
+      possible_rook = @board.get_piece(rook_pos)
+
+      if !possible_rook
+        return false
+      end
+
+      if !possible_p1 or !possible_p2 or
+          @did_move or possible_rook.did_move
+        return false
+      end
     end
 
     # can't move to the danger zone
@@ -195,7 +258,7 @@ class King < Piece
 
       return true if line_is_danger?(to, [1, 0])
 
-      return true if line_is_danger(to, [-1, 0])
+      return true if line_is_danger?(to, [-1, 0])
 
     # top and bot
     when [1, 0], [-1, 0]

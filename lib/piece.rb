@@ -4,7 +4,7 @@ class Piece
   include Color
 
   attr_reader :directions, :token, :token_bg
-  attr_accessor :position, :color, :moves
+  attr_accessor :position, :color, :did_move
 
   def initialize(color, position, board)
     @token = ""
@@ -12,7 +12,7 @@ class Piece
     @color = color
     @position = position
     @board = board
-    @moves = 0
+    @did_move = false
   end
 
   def set_token_bg(bg)

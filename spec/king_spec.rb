@@ -107,6 +107,83 @@ describe King do
       expect(res).to be true
     end
 
+    # castling
+    it "returns true if king can do long castling" do
+      board = Board.new
+      board.castling = "kqKQ"
+      king = King.new(:black, [0, 4], board)
+      rook = Rook.new(:black, [0, 0], board)
+      board.set_piece(king, [0, 4])
+      board.set_piece(rook, [0, 0])
+      destination = [0, 2]
+      res = king.can_move?(destination)
+      expect(res).to be true
+    end
+
+    it "returns true if king can do short castling" do
+      board = Board.new
+      board.castling = "kqKQ"
+      king = King.new(:black, [0, 4], board)
+      rook = Rook.new(:black, [0, 7], board)
+      board.set_piece(king, [0, 4])
+      board.set_piece(rook, [0, 7])
+      destination = [0, 6]
+      res = king.can_move?(destination)
+      expect(res).to be true
+    end
+
+    it "returns false if king can't do long castling" do
+      board = Board.new
+      board.castling = "kqKQ"
+      king = King.new(:black, [0, 4], board)
+      rook = Rook.new(:black, [0, 0], board)
+      queen = Queen.new(:black, [0, 3], board)
+      board.set_piece(queen, [0, 3])
+      board.set_piece(king, [0, 4])
+      board.set_piece(rook, [0, 7])
+      destination = [0, 2]
+      res = king.can_move?(destination)
+      expect(res).to be false
+    end
+
+    it "returns false if king can't do long castling" do
+      board = Board.new
+      board.castling = "kKQ"
+      king = King.new(:black, [0, 4], board)
+      rook = Rook.new(:black, [0, 0], board)
+      board.set_piece(king, [0, 4])
+      board.set_piece(rook, [0, 7])
+      destination = [0, 2]
+      res = king.can_move?(destination)
+      expect(res).to be false
+    end
+
+
+    it "returns false if king can't do short castling" do
+      board = Board.new
+      board.castling = "kqKQ"
+      king = King.new(:black, [0, 4], board)
+      rook = Rook.new(:black, [0, 0], board)
+      king.did_move = true
+      rook.did_move = true
+      board.set_piece(king, [0, 4])
+      board.set_piece(rook, [0, 7])
+      destination = [0, 6]
+      res = king.can_move?(destination)
+      expect(res).to be false
+    end
+
+    it "returns false if king can't do short castling" do
+      board = Board.new
+      board.castling = "qKQ"
+      king = King.new(:black, [0, 4], board)
+      rook = Rook.new(:black, [0, 0], board)
+      board.set_piece(king, [0, 4])
+      board.set_piece(rook, [0, 7])
+      destination = [0, 6]
+      res = king.can_move?(destination)
+      expect(res).to be false
+    end
   end
   describe "#line_is_danger?" do
 

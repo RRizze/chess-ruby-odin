@@ -11,6 +11,10 @@ class Knight < Piece
     ]
   end
 
+  def get_fen
+    (@color == :black) ? "n" : "N"
+  end
+
   def get_direction(from, to)
     if ((to[0] - from[0]).abs == 2 and (to[1] - from[1]).abs == 1) or
       ((to[0] - from[0]).abs == 1 and (to[1] - from[1]).abs == 2)

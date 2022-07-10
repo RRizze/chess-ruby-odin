@@ -8,6 +8,10 @@ class Bishop < Piece
     @directions = [[1, 1], [-1, 1], [1, -1], [-1, -1]]
   end
 
+  def get_fen
+    (@color == :black) ? "b" : "B"
+  end
+
   def can_move?(destination)
     # false if piece at the destination has same color
     possible_piece = @board.get_piece(destination)

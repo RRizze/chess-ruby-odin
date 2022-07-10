@@ -11,6 +11,10 @@ class Queen < Piece
     ]
   end
 
+  def get_fen
+    (@color == :black) ? "q" : "Q"
+  end
+
   def can_move?(destination)
     # false if same colors
     possible_piece = @board.get_piece(destination)

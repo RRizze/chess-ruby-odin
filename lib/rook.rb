@@ -8,6 +8,10 @@ class Rook < Piece
     @directions = [[1, 0], [-1, 0], [0, 1], [0, -1]]
   end
 
+  def get_fen
+    (@color == :black) ? "r" : "R"
+  end
+
   def can_move?(destination)
     # false if piece at the destination has same color
     possible_piece = @board.get_piece(destination)
