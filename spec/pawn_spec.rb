@@ -48,8 +48,10 @@ describe Pawn do
     it "returns true if piece can eats another moving to diagonal" do
       board = Board.new
       board.fill()
-      player_w = Player.new(:white)
-      player_b = Player.new(:black)
+      king_w = board.get_piece([7, 4])
+      king_b = board.get_piece([0, 4])
+      player_w = Player.new(:white, king_w)
+      player_b = Player.new(:black, king_b)
       board.move("e2-e4", player_w)
       board.move("d7-d5", player_b)
       res = board.move("e4-d5", player_w)

@@ -44,8 +44,7 @@ class Queen < Piece
         @position[0] + direction[0] * step,
         @position[1] + direction[1] * step
       ]
-
-      if !@board.cell_is_empty?(new_pos)
+      if !@board.cell_is_empty?(new_pos) and step < spaces_to_move
         return false
       end
     end

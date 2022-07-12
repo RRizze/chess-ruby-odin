@@ -47,6 +47,11 @@ class Pawn < Piece
       pawn_pos = [@position[0], @position[1] + (destination[1] - @position[1])]
       if pawn_pos != @board.en_passant_pos
         return false
+      else
+        @board.remove_piece(pawn_pos)
+        # CLEAR EN_PASSANT
+        @board.en_passant_pos = "-"
+        return true
       end
     end
 
@@ -57,12 +62,13 @@ class Pawn < Piece
     row = to[0] - from[0]
     col = to[1] - from[1]
 
-    if row.abs > 2 or col.abs >= 2
+    if row.abs > 2 or col.abs > 2
       return []
     end
 
     if (row.abs == 2 and col == 0 and from[0] == 1 and @color == :black) or
         (row.abs == 2 and col == 0 and from[0] == 6 and @color == :no_color)
+      # SET EN_PASSANT
       @board.en_passant_pos = to
       return [row, col]
     elsif (row.abs == 2 and col == 0 and from[0] != 1 and @color == :black) or

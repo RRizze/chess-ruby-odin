@@ -52,42 +52,48 @@ class Game
     end
   end
 
-  def save_game(game_state)
-    state = generate_fen(game_state)
+  def save_game(board)
+    fen = generate_fen(board)
+    game_state = { last_save: fen }
 
-    json_data = JSON.generate(state)
+    json_data = JSON.generate(game_state)
     File.open("save_game.json", "w") do |file|
       file.write(json_data)
     end
   end
 
-  def generate_fen(game_state)
+  def generate_fen(board)
     res = ""
     empty_count = 0
     delimetr = "\\"
-    game_state[:board].each_with_index do |cell, index|
-      if (index + 1) % 8 == 0 and index != board.length - 1
-        res += delimetr
-        empty_count = 0
-      else
-        if cell.content.is_a?(String)
-          empty_count += 1
-        else
-          res += empty_count.to_s
+    arr = board.board
+
+    (0..7).each do |row|
+      (0..7).each do |col|
+        cell = arr[col + row*8]
+        if !cell.content.is_a?(String)
+          res += empty_count == 0 ? "" : "#{empty_count}"
           res += cell.content.get_fen
+          empty_count = 0
+        else
+          empty_count += 1
         end
       end
+      res += empty_count == 0 ? "" : "#{empty_count}"
+      res += delimetr if row != 7
+      empty_count = 0
     end
     res += " "
-    res += game_state[:future_move]
+    res += board.future_move
     res += " "
-    res += game_state[:castling]
+    res += board.castling
     res += " "
-    res += game_state[:en_passant_pos]
+    res += board.en_passant_pos
     res += " "
-    res += game_state[:halfmove] || "0"
+    res += "#{board.halfmove}"
     res += " "
-    res += game_state[:fullmove]
+    res += "#{board.fullmove}"
+    res
   end
 
   def load_last_game
@@ -95,7 +101,7 @@ class Game
     if File.exists?(filename)
       file = File.read(filename, encoding: "utf-8")
       game_state = JSON.parse(file)
-      return game_state
+      generate_board(game_state["last_save"])
     else
       return false
     end
@@ -103,65 +109,77 @@ class Game
 
   def pvp_start(game_state)
     board = nil
-    players = nil
     king_w = nil
     king_b = nil
     if game_state
       board = game_state["board"]
-      players = game_state["players"]
     else
       board = Board.new
       board.fill()
-      king_w = board.get_piece([0, 4])
-      king_b = board.get_piece([7, 4])
-      players = [Player.new(:white, king_w), Player.new(:black, king_b)]
+      king_b = board.get_piece([0, 4])
+      king_w = board.get_piece([7, 4])
     end
 
-    current_player = players[0]
+    player_b = Player.new(:black, king_b)
+    player_w = Player.new(:white, king_w)
+
+    current_player = player_w
+
+    res = false
 
     while true
       board.print_board
 
       # check for 'check' and 'checkmate'
-      res = current_player[:king].checkmate?()
+      res = current_player[:king].checkmate?
+
+      if res == :checkmate
+        puts "#{current_player[:color].to_s.capitalize} is lost. Game over."
+        puts
+        break
+      end
 
       if res == :check
-        puts "Check. Protect your king!"
-      elsif res == :checkmate
-        print "#{current_player[:color].to_s.capitalize} is lost. Game over."
-        break
+        puts "#{current_player[:color]} player. Your king in check!"
+        puts
       end
 
       txt_move(current_player, true)
       move = gets.chomp
 
-      if move == "save"
-        player_color = current_player.color == :black ? :white : :black
-        new_game_state = {
-          future_move: player_color,
-          castling: board.castling,
-          en_passant_pos: board.en_passant_pos,
-          halfmove: "0",
-          fullmove: "1",
-          board: board
-        }
-        save_game(new_game_state)
-        break
-      end
+      move_state = false
 
-      success = false
+      while !(move_state = board.move(move, current_player)) do
+        #clear_lines(3)
+        #move_state = board.move(move, current_player)
 
-      # TODO change success logic
-      until success = board.move(move, current_player) do
-        clear_lines(3)
-        txt_move(current_player, success)
+        txt_move(current_player, move_state)
         move = gets.chomp
       end
 
+      # pseudo code
+      # 1. check 'checkmate' or 'check'
+      # if 'checkmate' 
+      #   print winner or looser
+      # if 'check'
+      #   print '<your> king in check'
+      #   protect <your> king
+      #     try to do protect the king
+      #       -> accept move
+      #       -> check if move is valid and king is not in check
+      #         return true
+
+
+
+      if move == "save"
+        save_game(board)
+        break
+      end
+
       if current_player.color == :white
-        current_player = players[1]
+        current_player = player_b
       else
-        current_player = players[0]
+        current_player = player_w
       end
       clear_screen
     end

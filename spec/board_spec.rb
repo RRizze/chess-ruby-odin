@@ -64,12 +64,12 @@ describe Board do
 
     describe "movement_to_arr" do
       it "converts str to array of arrays and returns the last one" do
-        movement = "d5-d4"
+        movement = "h5-f7"
         #["d5", "d4"]
         #d5 > [3,3] d4 -> [3,4]
         board = Board.new
         res = board.movement_to_arr(movement)
-        expect(res).to eq([[3,3], [4,3]])
+        expect(res).to eq([[3,7], [1,5]])
       end
 
       it "converts str to array of arrays and returns the last one" do
@@ -116,16 +116,19 @@ describe Board do
           path = "c2-c4"
           board = Board.new
           board.fill()
-          player = Player.new(:white)
+          king_w = board.get_piece([7, 4])
+          player = Player.new(:white, king_w)
           res = board.move(path, player)
 
           expect(res).to be true
         end
 
-        it "returns FALSE and should do nothing wxith empty cells" do
+        it "returns FALSE and should do nothing with empty cells" do
           path = "d3-d4"
           board = Board.new
-          player = Player.new(:white)
+          board.fill()
+          king_w = board.get_piece([7, 4])
+          player = Player.new(:white, king_w)
           res = board.move(path, player)
 
           expect(res).to be false

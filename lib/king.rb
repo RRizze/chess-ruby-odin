@@ -104,7 +104,10 @@ class King < Piece
       # find any safe cells
       possible_free_dirs = (Set.new(danger_dirs) ^ Set.new(@directions)).to_a
       possible_free_dirs = possible_free_dirs.select do |dir|
-        @board.cell_is_empty?(sum_vec(@position, dir))
+        pos = sum_vec(@position, dir)
+        if @board.in_bounds?(pos) and @board.cell_is_empty?(pos)
+          dir
+        end
       end
 
       safe_cells = []
@@ -186,13 +189,21 @@ class King < Piece
 
     diff_cols = destination[1] - @position[1]
 
+    if diff_cols.abs == 2 and @did_move
+      return false
+    end
+
     if direction == [0, -1] and (diff_cols).abs == 2
       if @color == :black and !@board.castling.include?("q")
         return false
+      elsif @color == :black and @board.castling.include?("q")
+        @board.castling = "KQ"
       end
 
       if @color == :no_color and !@board.castling.include?("Q")
         return false
+      elsif @color == :no_color and @board.castling.include?("Q")
+        @board.castling = "kq"
       end
 
       empty_p1_pos = [@position[0], @position[1] - 1]
@@ -210,8 +221,7 @@ class King < Piece
         return false
       end
 
-      if !possible_p1 or !possible_p2 or !possible_p3 or
-          @did_move or possible_rook.did_move
+      if !possible_p1 or !possible_p2 or !possible_p3 or possible_rook.did_move
         return false
       end
 
@@ -238,8 +248,7 @@ class King < Piece
         return false
       end
 
-      if !possible_p1 or !possible_p2 or
-          @did_move or possible_rook.did_move
+      if !possible_p1 or !possible_p2 or possible_rook.did_move
         return false
       end
     end

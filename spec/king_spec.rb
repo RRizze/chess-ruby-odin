@@ -53,26 +53,24 @@ describe King do
 
     it "returns :checkmate if checkmate" do
       board = Board.new
-      king = King.new(:black, [3, 3], board)
-      board.set_piece(king, [3, 3])
+      king = King.new(:black, [0, 4], board)
+      board.set_piece(king, [0, 4])
 
-      bishop = Bishop.new(:no_color, [6, 1], board)
-      board.set_piece(bishop, [6, 1])
+      queen_b = Queen.new(:black, [0, 3], board)
+      board.set_piece(queen_b, [0, 3])
 
-      queen = Queen.new(:no_color, [2, 7], board)
-      board.set_piece(queen, [2, 7])
+      bishop_b = Bishop.new(:black, [0, 5], board)
+      board.set_piece(bishop_b, [0, 5])
 
-      rook = Rook.new(:no_color, [0, 3], board)
-      board.set_piece(rook, [0, 3])
+      pawn_b = Pawn.new(:black, [1, 3], board)
+      board.set_piece(pawn_b, [1, 3])
 
-      rook2 = Rook.new(:no_color, [4, 0], board)
-      board.set_piece(rook2, [4, 0])
+      #whites
+      bishop = Bishop.new(:no_color, [4, 2], board)
+      board.set_piece(bishop, [4, 2])
 
-      pawn1 = Pawn.new(:black, [3, 2], board)
-      board.set_piece(pawn1, [3, 2])
-
-      pawn2 = Pawn.new(:black, [3, 4], board)
-      board.set_piece(pawn2, [3, 4])
+      queen = Queen.new(:no_color, [1, 5], board)
+      board.set_piece(queen, [1, 5])
 
       res = king.checkmate?
       expect(res).to eq(:checkmate)

@@ -12,6 +12,7 @@ class Board
   include Color
   attr_accessor :board, :whites, :blacks
   attr_accessor :en_passant_pos, :castling
+  attr_reader :halfmove, :fullmove, :future_move
 
   LABELS = {
     letters: ["a", "b", "c", "d", "e", "f", "g", "h"],
@@ -28,6 +29,7 @@ class Board
     @castling = "KQkq"
     @halfmove = 0
     @fullmove = 1
+    @future_move = "w"
   end
 
   def create_board(w, h)
@@ -56,6 +58,11 @@ class Board
     piece.set_token_bg(bg_color)
 
     @board[index].content = piece
+  end
+
+  def clear_cell(pos)
+    cell = @board[get_index(pos)]
+    cell.content = colorize("  ", :no_color, cell.color)
   end
 
   def remove_piece(pos)
@@ -183,24 +190,49 @@ class Board
 
     if piece.can_move?(to)
       # do logic
-      if piece.is_a?(Pawn) and cell_is_empty?(to) and @en_passant_pos != "-"
-        @en_passant_pos = "-"
-        if piece.color == :black
-          remove_piece([to[0] - 1, to[1]])
-        else
-          remove_piece([to[0] + 1, to[1]])
-        end
+      # CHANGE FUTURE MOVE
+      if @future_move == "w"
+        @future_move = "b"
+      else
+        @future_move = "w"
       end
 
-      set_piece(piece, to)
+      # INCREMENT FULL MOVE COUNT
+      if piece.color == :black
+        @fullmove += 1
+      end
+
+      fallback_piece = cell_is_empty?(to) ? nil : get_piece(to)
+      fallback_move = piece.did_move
+
       piece.position = to
-      remove_piece(from)
+      piece.did_move = true
+      clear_cell(from)
+      remove_piece(to) if fallback_piece
+      set_piece(piece, to)
+
+      if player[:king].checkmate? == :check
+        set_piece(piece, from)
+        piece.position = from
+        piece.did_move = !fallback_move ? fallback_move : true
+        if fallback_piece
+          set_piece(fallback_piece, to)
+
+          if fallback_piece.color == :black
+            @blacks << fallback_piece
+          else
+            @whites << fallback_piece
+          end
+        end
+
+        return false
+      end
 
       return true
     else
       return false
     end
-
+    return true
   end
 
   def fill

@@ -39,7 +39,7 @@ class Rook < Piece
           @position[0],
           @position[1] + direction[1] * step
         ]
-        if !@board.cell_is_empty?(new_pos)
+        if !@board.cell_is_empty?(new_pos) and step < spaces_to_move
           return false
         end
       end
@@ -53,9 +53,22 @@ class Rook < Piece
           @position[0] + direction[0] * step,
           @position[1],
         ]
-        if !@board.cell_is_empty?(new_pos)
+        if !@board.cell_is_empty?(new_pos) and step < spaces_to_move
           return false
         end
+      end
+    end
+
+    # TRACK CASTLING
+    if !@did_move
+      if @position == [0, 0]
+        @board.castling = "kKQ"
+      elsif @position == [0, 7]
+        @board.castling = "qKQ"
+      elsif @position == [7, 0]
+        @board.castling = "kqK"
+      elsif @position == [7, 7]
+        @board.castling = "kqQ"
       end
     end
 
