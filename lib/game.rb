@@ -54,7 +54,7 @@ class Game
 
   def save_game(board)
     fen = generate_fen(board)
-    game_state = { last_save: fen }
+    game_state = { last_fen: fen, last_moves: board.moves }
 
     json_data = JSON.generate(game_state)
     File.open("save_game.json", "w") do |file|
@@ -88,7 +88,13 @@ class Game
     res += " "
     res += board.castling
     res += " "
-    res += board.en_passant_pos
+
+    if board.en_passant_pos == "-"
+      res += board.en_passant_pos
+    else
+      res += board.get_board_position(board.en_passant_pos)
+    end
+
     res += " "
     res += "#{board.halfmove}"
     res += " "
@@ -101,24 +107,181 @@ class Game
     if File.exists?(filename)
       file = File.read(filename, encoding: "utf-8")
       game_state = JSON.parse(file)
-      generate_board(game_state["last_save"])
+      board = generate_board(game_state)
+      board
     else
       return false
     end
   end
 
+  def generate_board(game_state)
+    # data[0] - board, [1] - future_move, [2] - KQkq, [3] - '-'
+    board = Board.new
+    moves = game_state["last_moves"]
+    board.moves = moves
+    data = game_state["last_fen"].split(" ")
+    board.castling = data[2]
+    board.future_move = data[1]
+    board.en_passant_pos = data[3]
+    board.halfmove = data[4]
+    board.fullmove = data[5]
+
+    col = 0
+    row = 0
+    data[0].each_char do |sym|
+      if sym == "\\"
+        col = 0
+        row += 1
+        next
+      end
+
+      if (sym =~ /[1-8]/)
+        col += sym.to_i
+        next
+      end
+
+      case sym
+      when "r"
+        rook = Rook.new(:black, [row, col], board)
+        if ([row, col] != [0, 0] and [row, col] != [0, 7])
+          rook.did_move = true
+        end
+
+        if [row, col] == [0, 0]
+          moves.each do |move|
+            if move.include?("a8-")
+              rook.did_move = true
+            end
+          end
+        end
+
+        if [row, col] == [0, 7]
+          moves.each do |move|
+            if move.include?("h8-")
+              rook.did_move = true
+            end
+          end
+        end
+        board.set_piece(rook, [row, col])
+        board.blacks << rook
+
+      when "R"
+        rook = Rook.new(:no_color, [row, col], board)
+        if [row, col] != [7, 0] and [row, col] != [7, 7]
+          rook.did_move = true
+        end
+
+        if [row, col] == [7, 0]
+          moves.each do |move|
+            if move.include?("a1-")
+              rook.did_move = true
+            end
+          end
+        end
+
+        if [row, col] == [7, 7]
+          moves.each do |move|
+            if move.include?("h1-")
+              rook.did_move = true
+            end
+          end
+        end
+        board.set_piece(rook, [row, col])
+        board.whites << rook
+
+      when "p"
+        pawn = Pawn.new(:black, [row, col], board)
+        board.set_piece(pawn, [row, col])
+        board.blacks << pawn
+
+      when "P"
+        pawn = Pawn.new(:no_color, [row, col], board)
+        board.set_piece(pawn, [row, col])
+        board.whites << pawn
+
+      when "n", "N"
+        color = sym == "n" ? :black : :no_color
+        knight = Knight.new(color, [row, col], board)
+        board.set_piece(knight, [row, col])
+        
+        if sym == "n"
+          board.blacks << knight
+        else
+          board.whites << knight
+        end
+
+      when "b", "B"
+        color = sym == "b" ? :black : :no_color
+        bishop = Bishop.new(color, [row, col], board)
+        board.set_piece(bishop, [row, col])
+        if sym == "b"
+          board.blacks << bishop
+        else
+          board.whites << bishop
+        end
+
+      when "q", "Q"
+        color = sym == "q" ? :black : :no_color
+        queen = Queen.new(color, [row, col], board)
+        board.set_piece(queen, [row, col])
+        if sym == "q"
+          board.blacks << queen
+        else
+          board.whites << queen
+        end
+
+      when "k"
+        king = King.new(:black, [row, col], board)
+
+        if [row, col] == [0, 4]
+          moves.each do |move|
+            if move.include?("e8-")
+              king.did_move = true
+            end
+          end
+        end
+        board.set_piece(king, [row, col])
+        board.blacks << king
+
+      when "K"
+        king = King.new(:no_color, [row, col], board)
+
+        if [row, col] == [7, 4]
+          moves.each do |move|
+            if move.include?("e1-")
+              king.did_move = true
+              #break
+            end
+          end
+        end
+        board.set_piece(king, [row, col])
+        board.whites << king
+      end
+
+      col += 1
+      if col > 7
+        col == 0
+        #row += 1
+      end
+    end
+
+    board
+  end
+
   def pvp_start(game_state)
     board = nil
-    king_w = nil
     king_b = nil
+    king_w = nil
+
     if game_state
-      board = game_state["board"]
+      board = game_state
     else
       board = Board.new
       board.fill()
-      king_b = board.get_piece([0, 4])
-      king_w = board.get_piece([7, 4])
     end
+
+    king_b = board.get_king(:black)
+    king_w = board.get_king(:no_color)
 
     player_b = Player.new(:black, king_b)
     player_w = Player.new(:white, king_w)
@@ -147,34 +310,22 @@ class Game
       txt_move(current_player, true)
       move = gets.chomp
 
-      move_state = false
-
-      while !(move_state = board.move(move, current_player)) do
-        #clear_lines(3)
-        #move_state = board.move(move, current_player)
-
-        txt_move(current_player, move_state)
-        move = gets.chomp
-      end
-
-      # pseudo code
-      # 1. check 'checkmate' or 'check'
-      # if 'checkmate' 
-      #   print winner or looser
-      # if 'check'
-      #   print '<your> king in check'
-      #   protect <your> king
-      #     try to do protect the king
-      #       -> accept move
-      #       -> check if move is valid and king is not in check
-      #         return true
-
-
-
       if move == "save"
         save_game(board)
         break
       end
+
+      move_state = false
+
+      while !(move_state = board.move(move, current_player)) do
+        clear_lines(3)
+        #move_state = board.move(move, current_player)
+
+        txt_move(current_player, move_state)
+        move = gets.chomp
+
+      end
+
 
       if current_player.color == :white
         current_player = player_b
@@ -204,9 +355,9 @@ class Game
       ai_start
     when "load"
       clear_screen
-      game_state = load_last_game
-      if game_state
-        pvp_start(game_state)
+      board = load_last_game
+      if board
+        pvp_start(board)
       else
         pvp_start(false)
       end

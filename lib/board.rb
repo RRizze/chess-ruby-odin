@@ -12,7 +12,8 @@ class Board
   include Color
   attr_accessor :board, :whites, :blacks
   attr_accessor :en_passant_pos, :castling
-  attr_reader :halfmove, :fullmove, :future_move
+  attr_accessor :halfmove, :fullmove, :future_move
+  attr_accessor :moves
 
   LABELS = {
     letters: ["a", "b", "c", "d", "e", "f", "g", "h"],
@@ -30,6 +31,14 @@ class Board
     @halfmove = 0
     @fullmove = 1
     @future_move = "w"
+    @moves = []
+  end
+
+  def get_board_position(arr)
+    res = ""
+    res += LABELS[:letters][arr[1]]
+    res += LABELS[:nums][arr[0]]
+    res
   end
 
   def create_board(w, h)
@@ -52,12 +61,16 @@ class Board
   end
 
   def set_piece(piece, pos)
-    index = get_index(pos)
-    bg_color = @board[index].color
-    # update bg color
-    piece.set_token_bg(bg_color)
-
-    @board[index].content = piece
+    if pos.is_a?(Numeric)
+      bg_color = @board[pos].color
+      piece.set_token_bg(bg_color)
+      @board[pos].content = piece
+    else
+      index = get_index(pos)
+      bg_color = @board[index].color
+      piece.set_token_bg(bg_color)
+      @board[index].content = piece
+    end
   end
 
   def clear_cell(pos)
@@ -89,6 +102,24 @@ class Board
 
   def get_index(pos)
     pos[0] * @columns + pos[1]
+  end
+
+  def get_king(color)
+    res = 0
+    if color == :black
+      @blacks.each do |piece|
+        if piece.is_a? King
+          res = piece
+        end
+      end
+    else
+      @whites.each do |piece|
+        if piece.is_a? King
+          res = piece
+        end
+      end
+    end
+    res
   end
 
   def print_board
@@ -172,6 +203,7 @@ class Board
     move_arr = movement_to_arr(movement)
 
     return false if !move_arr
+    @moves << movement
 
     from = move_arr[0]
     to = move_arr[1]
@@ -284,32 +316,32 @@ class Board
     # rook
     r1_white = Rook.new(:no_color, [7, 0], self)
     r2_white = Rook.new(:no_color, [7, 7], self)
-    @blacks.push(r1_white, r2_white)
+    @whites.push(r1_white, r2_white)
     set_piece(r1_white, [7, 0])
     set_piece(r2_white, [7, 7])
 
     # knight
     k1_white = Knight.new(:no_color, [7, 1], self)
     k2_white = Knight.new(:no_color, [7, 6], self)
-    @blacks.push(k1_white, k2_white)
+    @whites.push(k1_white, k2_white)
     set_piece(k1_white, [7, 1])
     set_piece(k2_white, [7, 6])
 
     # bishop
     b1_white = Bishop.new(:no_color, [7, 2], self)
     b2_white = Bishop.new(:no_color, [7, 5], self)
-    @blacks.push(b1_white, b2_white)
+    @whites.push(b1_white, b2_white)
     set_piece(b1_white, [7, 2])
     set_piece(b2_white, [7, 5])
 
     # queen
     q_white = Queen.new(:no_color, [7, 3], self)
-    @blacks.push(q_white)
+    @whites.push(q_white)
     set_piece(q_white, [7, 3])
 
     # king
     ki_white = King.new(:no_color, [7, 4], self)
-    @blacks.push(ki_white)
+    @whites.push(ki_white)
     set_piece(ki_white, [7, 4])
   end
 end
