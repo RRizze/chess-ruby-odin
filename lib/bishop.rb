@@ -2,8 +2,9 @@ require_relative "figure"
 
 class Bishop < Figure
 
-  def initialize(pos)
-    super(pos)
-    @game_symbol = "♝"
+  def initialize(color)
+    super(color)
+    @token = "♝ "
+    @directions = []
   end
 end

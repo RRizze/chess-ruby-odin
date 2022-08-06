@@ -1,4 +1,11 @@
+require "set"
 require_relative "cell"
+require_relative "pawn"
+require_relative "knight"
+require_relative "bishop"
+require_relative "rook"
+require_relative "queen"
+require_relative "king"
 
 class Board
   attr_accessor :board
@@ -24,21 +31,34 @@ class Board
     no_color: -> (str) { "\e[#{str}#{ESC_CLR}"},
   }
 
+  POSITIONS = ["a", "b", "c", "d", "e", "f", "g", "h"]
+
   def initialize
-    @rows = 7
-    @columns = 7
+    @rows = 8
+    @columns = 8
     @board = create_board(@rows, @columns)
+    init()
   end
 
   def create_board(w, h)
     board = []
     (0..7).each do |row|
       (0..7).each do |col|
-        board.push(Cell.new([row, col], "  "))
+        content = "  "
+        if (row+col) % 2 == 0
+          color = :blue
+          content = set_color_bg(content, :blue)
+          board.push(Cell.new([row, col], content, color))
+        else
+          color = :white
+          content = set_color_bg(content, :white)
+          board.push(Cell.new([row, col], content, color))
+        end
       end
     end
     board
   end
+
 
   def colorize(str, fg, bg)
     str = "" if str.nil?
@@ -63,23 +83,29 @@ class Board
 
   def print_board
     cell_str = ""
+    puts " " + POSITIONS.join(" ")
     (0..7).each do |row|
+      cell_str += "#{@rows-row}"
       (0..7).each do |col|
-        pos = row * 7 + col
-        if pos % 2 == 0
-          cell_str += set_color_bg(@board[pos].content, :blue)
+        pos = row * @columns + col
+        if (row+col) % 2 == 0
+          cell_str += @board[pos].content
         else
-          cell_str += set_color_bg(@board[pos].content, :white)
+          cell_str += @board[pos].content
         end
       end
+      cell_str += "#{row+1}"
       cell_str += "\n"
     end
     print cell_str
+    puts " " + POSITIONS.join(" ")
   end
 
-  def set_cell(figure)
-    pos = figure.position[0] * 7 + figure.position[1]
-    @board[pos].content = figure.game_symbol
+  def set_figure(figure, pos)
+    index = get_pos(pos)
+    cell = @board[index]
+    token = colorize(figure.token, figure.color, cell.color)
+    cell.content = set_color_fg(token, :black)
   end
 
   def cell_empty?(pos)
@@ -87,32 +113,72 @@ class Board
   end
 
   # bfs and neighbors
-  def neighbors(figure)
-    # array of what? [],[] or Cells or Figures
-    neighbors = []
-
-    figure.dirs.each do |dir|
-      pos = figure.position #[x, y]
-      # check boundaries
-      if pos[0] >= 0 and pos[0] <= 7 and pos[1] >= 0 and pos[1] <=7
-        # add to vectors
-        new_pos = [
-          dir[0] + pos[0],
-          dir[1] + pos[1]
-        ]
-        #neighbors.push(
-      end
-    end
+  def in_bounds?(position)
+    return (position[0] >= 0 and position[0] <= @rows and
+          position[1] >= 0 and position[1] <= @columns)
   end
 
-  def bfs(figure)
-    queue = [figure]
-    visited = Set.new
-    visited.add(figure)
+  def get_pos(pos)
+    pos[0] * @columns + pos[1]
+  end
 
-    while !queue.empty?
-      #current = queue.shif
+  private
+
+  def init
+    # pawns
+    (0..7).each do |col|
+      p_black = Pawn.new(:black)
+      set_figure(p_black, [1, col])
     end
+
+    (0..7).each do |col|
+      p_white = Pawn.new(:no_color)
+      set_figure(p_white, [6, col])
+    end
+
+    # rook
+    r1_black = Rook.new(:black)
+    set_figure(r1_black, [0,0])
+    r2_black = Rook.new(:black)
+    set_figure(r2_black, [0,7])
+    # knigh
+    k1_black = Knight.new(:black)
+    set_figure(k1_black, [0,1])
+    k2_black = Knight.new(:black)
+    set_figure(k2_black, [0,6])
+    # bishop
+    b1_black = Bishop.new(:black)
+    set_figure(b1_black, [0,2])
+    b2_black = Bishop.new(:black)
+    set_figure(b2_black, [0,5])
+    # queen
+    q_black = Queen.new(:black)
+    set_figure(q_black, [0,3])
+    # king
+    ki_black = King.new(:black)
+    set_figure(ki_black, [0,4])
+
+    # rook
+    r1_white = Rook.new(:no_color)
+    set_figure(r1_white, [7,0])
+    r2_white = Rook.new(:no_color)
+    set_figure(r2_white, [7,7])
+    # knigh
+    k1_white = Knight.new(:no_color)
+    set_figure(k1_white, [7,1])
+    k2_white = Knight.new(:no_color)
+    set_figure(k2_white, [7,6])
+    # bishop
+    b1_white = Bishop.new(:no_color)
+    set_figure(b1_white, [7,2])
+    b2_white = Bishop.new(:no_color)
+    set_figure(b2_white, [7,5])
+    # queen
+    q_white = Queen.new(:no_color)
+    set_figure(q_white, [7,3])
+    # king
+    ki_white = King.new(:no_color)
+    set_figure(ki_white, [7,4])
   end
 
 end

@@ -2,9 +2,10 @@ require_relative "figure"
 
 class Pawn < Figure
 
-  def initialize(pos)
-    super(pos)
-    @game_symbol = "♟"
+  def initialize(color)
+    super(color)
+    @token = "♟ "
+    @direction = []
   end
 
 end

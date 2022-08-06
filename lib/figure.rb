@@ -1,12 +1,12 @@
 class Figure
-  attr_reader :game_symbol
-  attr_reader :start_pos
-  attr_accessor :position
+  attr_reader :token
+  attr_reader :directions
+  attr_accessor :color
 
-  def initialize(pos)
-    @game_symbol = ""
-    @start_position = pos
-    @position = pos
+  def initialize(color)
+    @token = ""
+    @directions = []
+    @color = color
   end
 
 end
